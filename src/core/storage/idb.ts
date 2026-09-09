@@ -156,6 +156,15 @@ export async function gravarMeta(chave: string, valor: string): Promise<void> {
   })
 }
 
+export async function fecharBancoDeDados(): Promise<void> {
+  const promessa = instanciaBancoPromessa
+  instanciaBancoPromessa = null
+  if (promessa !== null) {
+    const banco = await promessa.catch(() => null)
+    banco?.close()
+  }
+}
+
 export function prepararPersistencia(): Promise<StorageStatus> {
   return obterStatusArmazenamento()
 }

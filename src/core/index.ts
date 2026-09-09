@@ -1,5 +1,4 @@
 export * from './errors'
 export * from './formato'
-export * from './markdown'
 export * from './repositorios'
 export * from './storage'

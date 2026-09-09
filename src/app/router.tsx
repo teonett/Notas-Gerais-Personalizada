@@ -1,18 +1,23 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '../layout'
-import { BuscaPage } from '../features/busca/BuscaPage'
-import { CadernosPage } from '../features/cadernos/CadernosPage'
-import { CentralAnexosPage } from '../features/anexos/CentralAnexosPage'
-import { ConfiguracoesPage } from '../features/configuracoes/ConfiguracoesPage'
 import { NotFoundPage } from '../features/erros/NotFoundPage'
-import { GrafoNotaPage, GrafoPage } from '../features/grafo'
-import { ImportacaoExportacaoPage } from '../features/dados/ImportacaoExportacaoPage'
-import { LixeiraPage } from '../features/lixeira/LixeiraPage'
-import { DashboardPage } from '../features/painel/DashboardPage'
-import { EditorPage, NotasArquivadasPage, NotasPage } from '../features/notas'
-import { StatusPage } from '../features/status/StatusPage'
-import { SyncPage } from '../features/sync/SyncPage'
-import { TagsPage } from '../features/tags/TagsPage'
+import {
+  BuscaPage,
+  CadernosPage,
+  CentralAnexosPage,
+  ConfiguracoesPage,
+  DashboardPage,
+  EditorPage,
+  GrafoNotaPage,
+  GrafoPage,
+  ImportacaoExportacaoPage,
+  LixeiraPage,
+  NotasArquivadasPage,
+  NotasPage,
+  StatusPage,
+  SyncPage,
+  TagsPage,
+} from './lazy-paginas'
 
 export const router = createBrowserRouter([
   {
