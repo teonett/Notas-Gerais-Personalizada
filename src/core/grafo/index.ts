@@ -1,5 +1,7 @@
 export * from './constantes'
 export * from './grafo'
+export * from './termos'
 export type { GrafoDeNotas, Relacao } from './grafo'
+export type { FrequenciaDeTermo } from './termos'
 export { pluginLinksInternos } from './markdown-links'
 export { useMapaDeLinks } from './useMapaDeLinks'

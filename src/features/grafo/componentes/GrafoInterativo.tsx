@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react'
 import cytoscape from 'cytoscape'
+import type { EdgeSingular } from 'cytoscape'
 import cola from 'cytoscape-cola'
 import { useTema } from '../../../theme'
 import type { Nota } from '../../../domain/nota'
 import type { Relacao } from '../../../core/grafo'
+import type { ModoLayout } from './AlternadorLayout'
 
 export interface GrafoInterativoProps {
   notas: Nota[]
   relacoes: Relacao[]
   aoClicarNota: (id: string) => void
   alturaClasse?: string
+  destaqueId?: string
+  layout?: ModoLayout
 }
 
 interface NoDados {
@@ -17,45 +21,42 @@ interface NoDados {
   rotulo: string
 }
 
-interface ArestaDados {
-  origemId: string
-  destinoId: string
-}
-
 cytoscape.use(cola)
-
-function deduplicarArestas(relacoes: Relacao[]): ArestaDados[] {
-  const vistas = new Set<string>()
-  const arestas: ArestaDados[] = []
-  for (const relacao of relacoes) {
-    const chave =
-      relacao.origemId < relacao.destinoId
-        ? `${relacao.origemId}|${relacao.destinoId}`
-        : `${relacao.destinoId}|${relacao.origemId}`
-    if (vistas.has(chave)) {
-      continue
-    }
-    vistas.add(chave)
-    arestas.push(relacao)
-  }
-  return arestas
-}
 
 export function GrafoInterativo({
   notas,
   relacoes,
   aoClicarNota,
   alturaClasse = 'h-[58svh]',
+  destaqueId,
+  layout = 'cola',
 }: GrafoInterativoProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const aoclicarRef = useRef(aoClicarNota)
   const { tema } = useTema()
   const escuro = tema === 'escuro'
+
+  useEffect(() => {
+    aoclicarRef.current = aoClicarNota
+  }, [aoClicarNota])
 
   const nos = useMemo<NoDados[]>(
     () => notas.map((nota) => ({ id: nota.id, rotulo: nota.titulo })),
     [notas],
   )
-  const arestas = useMemo(() => deduplicarArestas(relacoes), [relacoes])
+  const arestas = useMemo(() => {
+    const vistas = new Set<string>()
+    const unicas: Relacao[] = []
+    for (const relacao of relacoes) {
+      const idAresta = `aresta-${relacao.tipo}-${relacao.origemId}-${relacao.destinoId}`
+      if (vistas.has(idAresta)) {
+        continue
+      }
+      vistas.add(idAresta)
+      unicas.push(relacao)
+    }
+    return unicas
+  }, [relacoes])
 
   useEffect(() => {
     const container = containerRef.current
@@ -66,15 +67,36 @@ export function GrafoInterativo({
     const elementos = [
       ...nos.map((no) => ({
         data: { id: no.id, rotulo: no.rotulo },
+        classes: no.id === destaqueId ? 'destaque' : undefined,
       })),
       ...arestas.map((aresta) => ({
         data: {
-          id: `aresta-${aresta.origemId}-${aresta.destinoId}`,
+          id: `aresta-${aresta.tipo}-${aresta.origemId}-${aresta.destinoId}`,
           source: aresta.origemId,
           target: aresta.destinoId,
+          rotulo: aresta.rotulo ?? '',
+          peso: aresta.peso,
         },
+        classes: aresta.tipo,
       })),
     ]
+
+    const opcoesDeLayout =
+      layout === 'circulo'
+        ? {
+            name: 'concentric',
+            animate: true,
+            padding: 40,
+            minNodeSpacing: 28,
+          }
+        : {
+            name: 'cola',
+            animate: true,
+            padding: 30,
+            nodeSpacing: 26,
+            edgeLength: 90,
+            randomize: true,
+          }
 
     const cy = cytoscape({
       container,
@@ -103,29 +125,53 @@ export function GrafoInterativo({
           },
         },
         {
+          selector: 'node.destaque',
+          style: {
+            'border-width': 4,
+            'border-color': escuro ? '#c7d2fe' : '#1e1b4b',
+          },
+        },
+        {
           selector: 'edge',
           style: {
-            width: 1.5,
-            'line-color': escuro ? '#52525b' : '#cbd5e1',
             'curve-style': 'bezier',
+            'font-size': 6,
+            color: escuro ? '#a1a1aa' : '#71717a',
+            'text-rotation': 'autorotate',
+            'text-background-color': escuro ? '#18181b' : '#ffffff',
+            'text-background-opacity': 0.6,
+            'text-background-padding': 1,
+            label: 'data(rotulo)',
+            width: (linha: EdgeSingular): number => 1 + Math.min((linha.data('peso') as number) ?? 1, 3) * 0.7,
+          },
+        },
+        {
+          selector: 'edge.wikilink',
+          style: {
+            'line-color': escuro ? '#818cf8' : '#4f46e5',
             'target-arrow-shape': 'triangle',
-            'target-arrow-color': escuro ? '#71717a' : '#94a3b8',
+            'target-arrow-color': escuro ? '#818cf8' : '#4f46e5',
             'arrow-scale': 0.7,
           },
         },
+        {
+          selector: 'edge.tag',
+          style: {
+            'line-color': escuro ? '#34d399' : '#059669',
+          },
+        },
+        {
+          selector: 'edge.termo',
+          style: {
+            'line-color': escuro ? '#fbbf24' : '#d97706',
+          },
+        },
       ] as never,
-      layout: {
-        name: 'cola',
-        animate: true,
-        padding: 30,
-        nodeSpacing: 26,
-        edgeLength: 90,
-        randomize: true,
-      } as never,
+      layout: opcoesDeLayout as never,
     })
 
     cy.on('tap', 'node', (evento) => {
-      aoClicarNota(evento.target.id())
+      aoclicarRef.current(evento.target.id())
     })
 
     cy.fit(undefined, 40)
@@ -133,7 +179,7 @@ export function GrafoInterativo({
     return () => {
       cy.destroy()
     }
-  }, [nos, arestas, escuro, aoClicarNota])
+  }, [nos, arestas, escuro, destaqueId, layout])
 
   return (
     <div

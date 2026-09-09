@@ -1,4 +1,5 @@
 export * from './anexo'
+export * from './auth'
 export * from './caderno'
 export * from './id'
 export * from './nota'

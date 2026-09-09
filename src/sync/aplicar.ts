@@ -1,7 +1,8 @@
-import { abrirBancoDeDados } from '../core/storage/idb'
 import type { StoreName } from '../core/storage/config'
-import { comTransacao } from '../core/repositorios/base'
+import { apagarItem, gravarItem } from '../core/storage/idb'
 import { anexosStore } from '../core/repositorios/anexos'
+import { obterChaveDaSessao } from '../core/auth/sessao'
+import { decifrarRegistro, ehEnvelope } from '../core/vault/cifrar'
 import type { RegistroSync } from './contrato'
 import { CHAVES_SINCRONIZACAO } from './contrato'
 import { gravarSincronizacao } from './armazenamento'
@@ -15,23 +16,28 @@ const NOMES_STORES: Record<RegistroSync['tipo'], StoreName> = {
   anexo: 'anexos',
 }
 
+async function recuperarDadosDoServidor(dados: unknown): Promise<unknown> {
+  const chave = obterChaveDaSessao()
+  if (chave !== null && ehEnvelope(dados)) {
+    return decifrarRegistro(chave, dados)
+  }
+  return dados
+}
+
 async function escreverDados(tipo: RegistroSync['tipo'], dados: unknown): Promise<void> {
-  const banco = await abrirBancoDeDados()
-  const storeNome = NOMES_STORES[tipo]
-  await comTransacao(banco, [storeNome], 'readwrite', async (transacao) => {
-    transacao.objectStore(storeNome).put(dados)
-  })
+  if ((dados as { id?: string }).id === undefined) {
+    return
+  }
+  await gravarItem(NOMES_STORES[tipo], dados)
 }
 
 async function apagarDados(tipo: RegistroSync['tipo'], id: string): Promise<void> {
-  const banco = await abrirBancoDeDados()
-  const storeNome = NOMES_STORES[tipo]
-  await comTransacao(banco, [storeNome], 'readwrite', async (transacao) => {
-    transacao.objectStore(storeNome).delete(id)
-  })
+  await apagarItem(NOMES_STORES[tipo], id)
 }
 
 async function aplicarUm(registro: RegistroSync): Promise<void> {
+  const dados = await recuperarDadosDoServidor(registro.dados)
+
   if (registro.apagado) {
     await apagarDados(registro.tipo, registro.id)
     if (registro.tipo === 'nota') {
@@ -43,18 +49,19 @@ async function aplicarUm(registro: RegistroSync): Promise<void> {
   if (registro.tipo === 'anexo') {
     const existente = await anexosStore.obter(registro.id)
     if (existente === undefined) {
+      const pendente: RegistroSync = { ...registro, dados }
       await gravarSincronizacao(
         `${CHAVES_SINCRONIZACAO.prefixoBlobPendente}${registro.id}`,
-        JSON.stringify(registro),
+        JSON.stringify(pendente),
       )
     }
     return
   }
 
-  if (registro.dados === null || typeof registro.dados !== 'object') {
+  if (dados === null || typeof dados !== 'object') {
     return
   }
-  await escreverDados(registro.tipo, registro.dados)
+  await escreverDados(registro.tipo, dados)
 }
 
 export async function aplicarRegistros(registros: RegistroSync[]): Promise<void> {

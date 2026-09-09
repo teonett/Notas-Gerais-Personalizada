@@ -14,8 +14,12 @@ notas entre dispositivos e por meio de um grafo de conhecimento.
   como blobs no editor.
 - **Markdown enriquecido**: wikilinks `[[Título]]`, blocos **Mermaid** e
   tabelas/GFM.
-- **Grafo de conhecimento**: nós = notas, arestas = wikilinks; visão global
-  (`/grafo`) e contextual (`/grafo/:id`) com backlinks.
+- **Grafo de conhecimento**: nós = notas; arestas por wikilinks `[[Título]]`,
+  tags compartilhadas e palavras-chave em comum, com filtro por tipo e
+  alternância de layout (automático ou círculos concêntricos); visão
+  global (`/grafo`) e contextual (`/grafo/:id`) com backlinks.
+- **Nuvem de palavras** (`/nuvem`): os termos mais recorrentes das notas em uma
+  nuvem colorida — clique em uma palavra para buscar as notas relacionadas.
 - **Sincronização** entre dispositivos via Cloudflare Worker (D1 + R2),
   offline-first com conflitos resolvidos por revisão vencedora (LWW).
 - **Importação e exportação**: Markdown, HTML e JSON.
@@ -67,20 +71,30 @@ stateDiagram-v2
 Cada criação, edição ou remoção de nota gera um **registro de mudança** (com
 revisão) que fica pendente na fila até a próxima sincronização.
 
-### Relacionamentos entre notas (wikilinks)
+### Relacionamentos entre notas
 
 ```mermaid
 flowchart LR
-    NOTA_A[Nota A<br/>conteúdo com [[Título B]]] -->|extração de wikilinks| LINKS[GrafoDeNotas<br/>relações origem → destino]
+    NOTA_A[Nota A<br/>conteúdo com [[Título B]] + tags] -->|extração de wikilinks, tags e termos| LINKS[GrafoDeNotas<br/>relações por tipo<br/>wikilink / tag / termo]
     NOTA_B[Nota existente com título "Título B"] --> LINKS
+    TAGS[(Tags compartilhadas)] --> LINKS
+    TERMOS[(Palavras-chave em comum<br/>título e conteúdo)] --> LINKS
     LINKS --> GLOBAL[Visão global<br/>/grafo]
     LINKS --> CONTEXTUAL[Visão contextual<br/>/grafo/:id]
+    LINKS --> NUVEM[Nuvem de palavras<br/>/nuvem]
     LINKS --> BACK[Backlinks<br/>quem aponta para mim]
     LINKS --> PREVIEW[MarkdownPreview<br/>[[Título]] vira link clicável]
 ```
 
 - A sintaxe `[[Título]]` dentro do conteúdo cria um link para a nota com aquele
   título (comparação normalizada, sem acentos e caixa-insensível).
+- Arestas de **tag** conectam notas que compartilham tags; arestas de **termo**
+  conectam notas com palavras-chave em comum no título e conteúdo (stopwords e
+  termos frequentes demais são ignorados). No grafo global é possível filtrar
+  cada tipo de aresta.
+- O grafo traz alternância de **layout**: *Automático* (força direcionada, notas
+  relacionadas ficam próximas — padrão) ou *Círculos* (anéis concêntricos, os
+  nós mais conectados no centro).
 - Blocos ```mermaid no conteúdo também renderizam diagramas no preview,
   acompanhando o tema claro/escuro.
 
@@ -163,7 +177,7 @@ npm run lint          # oxlint (0 warnings/erros)
 
 | Comando          | O que valida                                                               |
 | ---------------- | -------------------------------------------------------------------------- |
-| `npm run teste:grafo` | extração de wikilinks, resolução de títulos, vizinhança, backlinks e plugin remark (15 passos) |
+| `npm run teste:grafo` | wikilinks, tags e termos (filtro por tipo), resolução de títulos, vizinhança, backlinks e plugin remark (25 passos) |
 | `npm run teste:e2e`   | sincronização ponta a ponta entre dois dispositivos falsos + Worker local (`wrangler dev --local`), 9 passos |
 
 ## Sincronização (backend)
@@ -197,8 +211,9 @@ produzido.
 - Etapa 1.3 (concluída): anotações, organização, anexos e PWA.
 - Sincronização entre dispositivos (concluída): offline-first, com fila de
   mudanças, revisões LWW e anexos sob demanda.
-- Etapa 1.4 (concluída): knowledge graph (wikilinks, grafo global e contextual,
-  backlinks) e diagramas Mermaid em Markdown.
+- Etapa 1.4 (concluída): knowledge graph (wikilinks + tags + palavras-chave,
+  grafo global e contextual, backlinks, nuvem de palavras) e diagramas Mermaid
+  em Markdown.
 
 ## Privacidade
 

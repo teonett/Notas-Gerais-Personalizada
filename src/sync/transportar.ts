@@ -1,5 +1,7 @@
 import { ERROR_CODES } from '../core/errors/errorCodes'
 import { anexosStore } from '../core/repositorios/anexos'
+import { obterChaveDaSessao } from '../core/auth/sessao'
+import { cifrarBytes, cifrarRegistro } from '../core/vault/cifrar'
 import type { ConfiguracaoSync } from './config'
 import { erroSincronizacao, lerConfiguracaoSync } from './config'
 import type { RegistroSync, Revisao } from './contrato'
@@ -44,8 +46,12 @@ async function enviarPendentes(config: ConfiguracaoSync): Promise<number> {
   }
 
   const registros = pendentes.map((p) => JSON.parse(p.valor) as RegistroSync)
+  const chave = obterChaveDaSessao()
 
   for (const registro of registros) {
+    if (chave !== null && registro.dados !== null) {
+      registro.dados = await cifrarRegistro(chave, registro.dados)
+    }
     if (registro.tipo === 'anexo' && !registro.apagado) {
       const anexo = await anexosStore.obter(registro.id)
       if (anexo === undefined) {
@@ -54,7 +60,11 @@ async function enviarPendentes(config: ConfiguracaoSync): Promise<number> {
           'Os dados de um anexo não foram encontrados no dispositivo.',
         )
       }
-      const bytes = await anexo.dados.arrayBuffer()
+      const brutos = new Uint8Array(await anexo.dados.arrayBuffer())
+      const bytes =
+        chave === null
+          ? brutos
+          : new TextEncoder().encode(JSON.stringify(await cifrarBytes(chave, brutos)))
       await enviarBlobAnexo(config, anexo.id, bytes, anexo.mime, anexo.nome)
     }
   }

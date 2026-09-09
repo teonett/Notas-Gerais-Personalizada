@@ -6,7 +6,7 @@
     {
       "binding": "THOTH_DB",
       "database_name": "thoth-sync",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "7733914e-e024-4042-ac22-7d42e33e0c92",
       "migrations_dir": "migrations"
     }
   ],

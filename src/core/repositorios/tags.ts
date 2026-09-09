@@ -1,7 +1,6 @@
 import type { Tag } from '../../domain'
 import { gerarId } from '../../domain'
-import { abrirBancoDeDados } from '../storage/idb'
-import { comTransacao, requisicaoParaPromessa } from './base'
+import { apagarItem, gravarItem, lerItem, listarItens } from '../storage/idb'
 import { registrarRemocao, registrarTag } from '../../sync/mudancas'
 
 const STORE = 'tags'
@@ -14,28 +13,17 @@ export const tagsStore = {
       nome: nome.trim(),
       criadaEm: agora,
     }
-    const banco = await abrirBancoDeDados()
-
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).put(tag)
-    })
+    await gravarItem(STORE, tag)
     await registrarTag(tag)
-
     return tag
   },
 
   async obter(id: string): Promise<Tag | undefined> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      return requisicaoParaPromessa(transacao.objectStore(STORE).get(id))
-    })
+    return lerItem<Tag>(STORE, id)
   },
 
   async listarTodas(): Promise<Tag[]> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      return requisicaoParaPromessa(transacao.objectStore(STORE).getAll())
-    })
+    return listarItens<Tag>(STORE)
   },
 
   async listar(): Promise<Tag[]> {
@@ -44,25 +32,18 @@ export const tagsStore = {
   },
 
   async renomear(id: string, nome: string): Promise<Tag | undefined> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      const existente = await requisicaoParaPromessa(store.get(id))
-      if (existente === undefined) {
-        return undefined
-      }
-      const atualizada: Tag = { ...existente, nome: nome.trim() }
-      await requisicaoParaPromessa(store.put(atualizada))
-      await registrarTag(atualizada)
-      return atualizada
-    })
+    const existente = await lerItem<Tag>(STORE, id)
+    if (existente === undefined) {
+      return undefined
+    }
+    const atualizada: Tag = { ...existente, nome: nome.trim() }
+    await gravarItem(STORE, atualizada)
+    await registrarTag(atualizada)
+    return atualizada
   },
 
   async remover(id: string): Promise<void> {
-    const banco = await abrirBancoDeDados()
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).delete(id)
-    })
+    await apagarItem(STORE, id)
     await registrarRemocao('tag', id)
   },
 }

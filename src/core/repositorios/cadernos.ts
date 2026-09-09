@@ -1,7 +1,6 @@
 import type { Caderno } from '../../domain'
 import { gerarId } from '../../domain'
-import { abrirBancoDeDados } from '../storage/idb'
-import { comTransacao, requisicaoParaPromessa } from './base'
+import { apagarItem, gravarItem, lerItem, listarItens } from '../storage/idb'
 import { registrarCaderno, registrarRemocao } from '../../sync/mudancas'
 
 const STORE = 'cadernos'
@@ -15,28 +14,17 @@ export const cadernosStore = {
       paiId,
       criadaEm: agora,
     }
-    const banco = await abrirBancoDeDados()
-
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).put(caderno)
-    })
+    await gravarItem(STORE, caderno)
     await registrarCaderno(caderno)
-
     return caderno
   },
 
   async obter(id: string): Promise<Caderno | undefined> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      return requisicaoParaPromessa(transacao.objectStore(STORE).get(id))
-    })
+    return lerItem<Caderno>(STORE, id)
   },
 
   async listarTodas(): Promise<Caderno[]> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      return requisicaoParaPromessa(transacao.objectStore(STORE).getAll())
-    })
+    return listarItens<Caderno>(STORE)
   },
 
   async listar(): Promise<Caderno[]> {
@@ -45,25 +33,18 @@ export const cadernosStore = {
   },
 
   async renomear(id: string, nome: string): Promise<Caderno | undefined> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      const existente = await requisicaoParaPromessa(store.get(id))
-      if (existente === undefined) {
-        return undefined
-      }
-      const atualizado: Caderno = { ...existente, nome: nome.trim() }
-      await requisicaoParaPromessa(store.put(atualizado))
-      await registrarCaderno(atualizado)
-      return atualizado
-    })
+    const existente = await lerItem<Caderno>(STORE, id)
+    if (existente === undefined) {
+      return undefined
+    }
+    const atualizado: Caderno = { ...existente, nome: nome.trim() }
+    await gravarItem(STORE, atualizado)
+    await registrarCaderno(atualizado)
+    return atualizado
   },
 
   async remover(id: string): Promise<void> {
-    const banco = await abrirBancoDeDados()
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).delete(id)
-    })
+    await apagarItem(STORE, id)
     await registrarRemocao('caderno', id)
   },
 }

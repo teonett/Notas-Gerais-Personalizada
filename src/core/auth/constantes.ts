@@ -1,0 +1,15 @@
+export const AUT = {
+  iteracoesPbkdf2: 310_000,
+  bytesSalt: 16,
+  bytesChave: 32,
+  bytesVerificador: 16,
+  bytesMaterial: 64,
+  bytesIv: 12,
+  minimoSenha: 6,
+  maximoSenha: 128,
+  prefixoBancoCofre: 'thothnet-vault-',
+  nomeBancoContas: 'thothnet-contas',
+  versaoBancoContas: 1,
+  lojaContas: 'contas',
+  indiceNome: 'porNome',
+} as const

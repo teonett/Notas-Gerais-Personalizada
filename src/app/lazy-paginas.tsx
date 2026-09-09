@@ -33,6 +33,9 @@ export const GrafoPage = lazy(() =>
 export const GrafoNotaPage = lazy(() =>
   import('../features/grafo/GrafoNotaPage').then((modulo) => ({ default: modulo.GrafoNotaPage })),
 )
+export const NuvemDePalavrasPage = lazy(() =>
+  import('../features/nuvem/NuvemDePalavrasPage').then((modulo) => ({ default: modulo.NuvemDePalavrasPage })),
+)
 export const ConfiguracoesPage = lazy(() =>
   import('../features/configuracoes/ConfiguracoesPage').then((modulo) => ({ default: modulo.ConfiguracoesPage })),
 )
@@ -44,4 +47,7 @@ export const SyncPage = lazy(() =>
 )
 export const StatusPage = lazy(() =>
   import('../features/status/StatusPage').then((modulo) => ({ default: modulo.StatusPage })),
+)
+export const SegurancaPage = lazy(() =>
+  import('../features/seguranca/SegurancaPage').then((modulo) => ({ default: modulo.SegurancaPage })),
 )

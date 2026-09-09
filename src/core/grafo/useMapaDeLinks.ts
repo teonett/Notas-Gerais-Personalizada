@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { notasStore } from '../repositorios/notas'
+import { tagsStore } from '../repositorios/tags'
 import { construirGrafoDeNotas } from './grafo'
 import type { GrafoDeNotas } from './grafo'
 
@@ -8,11 +9,10 @@ export function useMapaDeLinks(): GrafoDeNotas | null {
 
   useEffect(() => {
     let ativo = true
-    notasStore
-      .listarTodas()
-      .then((todas) => {
+    Promise.all([notasStore.listarTodas(), tagsStore.listarTodas()])
+      .then(([todas, tags]) => {
         if (ativo) {
-          setGrafo(construirGrafoDeNotas(todas))
+          setGrafo(construirGrafoDeNotas(todas, tags))
         }
       })
       .catch(() => {

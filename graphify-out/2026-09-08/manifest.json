@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1788913208.8311834,
-    "seen": 1788913447.2632778,
-    "ast_hash": "2dae22ec9a055a258f5b47a5425b0498",
+    "mtime": 1788915161.9469147,
+    "seen": 1788915464.3607988,
+    "ast_hash": "64f508cf87075cac80895257fbb6d2b6",
     "semantic_hash": ""
   },
   "src/app/App.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "src/app/router.tsx": {
-    "mtime": 1788912929.0232186,
-    "seen": 1788913447.26346,
-    "ast_hash": "52128253c96fdaf103362b92c4c87a04",
+    "mtime": 1788918591.2950346,
+    "seen": 1788918896.495796,
+    "ast_hash": "f50f8b8c7f61243f53df907d0255e09f",
     "semantic_hash": ""
   },
   "src/components/PagePlaceholder.tsx": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "src/core/markdown/render.tsx": {
-    "mtime": 1788910764.3018088,
-    "seen": 1788910938.184671,
-    "ast_hash": "4dc889df1ea7641b193db3bbc77403a1",
+    "mtime": 1788915328.08574,
+    "seen": 1788915464.362955,
+    "ast_hash": "1c771ff076f3ad293feeb9540bb05b5b",
     "semantic_hash": ""
   },
   "src/core/repositorios/base.ts": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "src/features/busca/BuscaPage.tsx": {
-    "mtime": 1788909602.6720905,
-    "seen": 1788909923.7523453,
-    "ast_hash": "90cbf722f472bb7563d66fbd81c3ad00",
+    "mtime": 1788918605.7000942,
+    "seen": 1788918896.5065167,
+    "ast_hash": "402249c749e39313214a88de9bb77033",
     "semantic_hash": ""
   },
   "src/features/cadernos/CadernosPage.tsx": {
@@ -312,15 +312,15 @@
     "semantic_hash": ""
   },
   "src/features/grafo/GrafoNotaPage.tsx": {
-    "mtime": 1788818321.9580815,
-    "seen": 1788909923.752352,
-    "ast_hash": "1bb5ff6607fcaa3075be9555fac199da",
+    "mtime": 1788918267.5403192,
+    "seen": 1788918896.507003,
+    "ast_hash": "73a0a5637ac01d90b88b90aa93be9845",
     "semantic_hash": ""
   },
   "src/features/grafo/GrafoPage.tsx": {
-    "mtime": 1788818318.9534009,
-    "seen": 1788909923.7523527,
-    "ast_hash": "dc3b391dc7fcd2f83eca7c95e6b8f08c",
+    "mtime": 1788918237.0788202,
+    "seen": 1788918896.5070043,
+    "ast_hash": "72c7da658c86aa341969501af4f6cdbd",
     "semantic_hash": ""
   },
   "src/features/grafo/index.ts": {
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "src/layout/navigation.ts": {
-    "mtime": 1788911587.165351,
-    "seen": 1788912092.3579907,
-    "ast_hash": "758ced1bb50b7218efd24530a6ea02e2",
+    "mtime": 1788918599.676461,
+    "seen": 1788918896.5103974,
+    "ast_hash": "f5990db9e69180cb1a5a57d9d0ee59db",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -522,15 +522,15 @@
     "semantic_hash": ""
   },
   "vite.config.ts": {
-    "mtime": 1788818127.3476598,
-    "seen": 1788909923.7523847,
-    "ast_hash": "6e58e55d7fabaa2f98bfa3cd732ffbda",
+    "mtime": 1788915291.340092,
+    "seen": 1788915464.3687112,
+    "ast_hash": "5addab317d54289359f7e04007aa945f",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788817864.118736,
-    "seen": 1788909923.7523859,
-    "ast_hash": "10495bfcc6c568eca4dab6dd5df795d3",
+    "mtime": 1788918889.1416297,
+    "seen": 1788918896.5133314,
+    "ast_hash": "5ac473200609f684dbeadc633aa3e6f7",
     "semantic_hash": ""
   },
   "index.html": {
@@ -738,9 +738,81 @@
     "semantic_hash": ""
   },
   "src/app/lazy-paginas.tsx": {
-    "mtime": 1788912919.769942,
-    "seen": 1788913447.2634585,
-    "ast_hash": "c4449ba231d0186df144881623b0b24d",
+    "mtime": 1788918581.6726289,
+    "seen": 1788918896.495793,
+    "ast_hash": "42d2ae912e0495c04d07e79d4cf4f8d2",
+    "semantic_hash": ""
+  },
+  "scripts/teste-grafo.ts": {
+    "mtime": 1788918652.5436728,
+    "seen": 1788918896.4950793,
+    "ast_hash": "ba1cbb761cb3ef350c41f796c088c173",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/constantes.ts": {
+    "mtime": 1788914934.6418452,
+    "seen": 1788915464.3627377,
+    "ast_hash": "b88afe691b4577c93a22da39757f1c64",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/grafo.ts": {
+    "mtime": 1788918555.038559,
+    "seen": 1788918896.5002837,
+    "ast_hash": "533ad5130f793c352647346089c6b575",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/index.ts": {
+    "mtime": 1788918560.3746388,
+    "seen": 1788918896.5002868,
+    "ast_hash": "9f1c912008eda1cfce0fd4efaec52e49",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/markdown-links.ts": {
+    "mtime": 1788915236.2072537,
+    "seen": 1788915464.3627412,
+    "ast_hash": "dfccd934559de9b6634b94024181effc",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/useMapaDeLinks.ts": {
+    "mtime": 1788918181.9284985,
+    "seen": 1788918896.5005412,
+    "ast_hash": "f6ddc193f8943bc9ed650c225fef9bda",
+    "semantic_hash": ""
+  },
+  "src/core/markdown/DiagramaMermaid.tsx": {
+    "mtime": 1788915316.8612003,
+    "seen": 1788915464.3628147,
+    "ast_hash": "4671d523c17296b1551a95166a3bc651",
+    "semantic_hash": ""
+  },
+  "src/features/grafo/componentes/GrafoInterativo.tsx": {
+    "mtime": 1788918694.1068428,
+    "seen": 1788918896.5070057,
+    "ast_hash": "e5d00a9bda1789ae5ea42a1fe8dd3aa9",
+    "semantic_hash": ""
+  },
+  "src/types/cytoscape-cola.d.ts": {
+    "mtime": 1788915087.3937979,
+    "seen": 1788915464.3684402,
+    "ast_hash": "411f25b64320feefb6fab6c6e3549da0",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/stopwords.ts": {
+    "mtime": 1788918125.2837696,
+    "seen": 1788918896.5005362,
+    "ast_hash": "53db79063e9783b2021b0610d7826c8d",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/termos.ts": {
+    "mtime": 1788918531.8259606,
+    "seen": 1788918896.5005383,
+    "ast_hash": "b40ae6bc6c9718fc00e8e7d316a31d2b",
+    "semantic_hash": ""
+  },
+  "src/features/nuvem/NuvemDePalavrasPage.tsx": {
+    "mtime": 1788918821.4622297,
+    "seen": 1788918896.507776,
+    "ast_hash": "deeaa5c69aa7d997ebc34615f3b08999",
     "semantic_hash": ""
   }
 }

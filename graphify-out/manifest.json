@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "src/app/router.tsx": {
-    "mtime": 1788912929.0232186,
-    "seen": 1788913447.26346,
-    "ast_hash": "52128253c96fdaf103362b92c4c87a04",
+    "mtime": 1788918591.2950346,
+    "seen": 1788918896.495796,
+    "ast_hash": "f50f8b8c7f61243f53df907d0255e09f",
     "semantic_hash": ""
   },
   "src/components/PagePlaceholder.tsx": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "src/features/busca/BuscaPage.tsx": {
-    "mtime": 1788909602.6720905,
-    "seen": 1788909923.7523453,
-    "ast_hash": "90cbf722f472bb7563d66fbd81c3ad00",
+    "mtime": 1788918605.7000942,
+    "seen": 1788918896.5065167,
+    "ast_hash": "402249c749e39313214a88de9bb77033",
     "semantic_hash": ""
   },
   "src/features/cadernos/CadernosPage.tsx": {
@@ -312,15 +312,15 @@
     "semantic_hash": ""
   },
   "src/features/grafo/GrafoNotaPage.tsx": {
-    "mtime": 1788915252.115396,
-    "seen": 1788915464.3652716,
-    "ast_hash": "38b3ce175db7026753ff90629380bb05",
+    "mtime": 1788919037.8850672,
+    "seen": 1788919080.6054852,
+    "ast_hash": "284c10f31b933372bbb8b20092ccc3ee",
     "semantic_hash": ""
   },
   "src/features/grafo/GrafoPage.tsx": {
-    "mtime": 1788915139.1659276,
-    "seen": 1788915464.3652728,
-    "ast_hash": "f74adc373000bcb7b504c5ba69e6cf87",
+    "mtime": 1788919026.5348399,
+    "seen": 1788919080.605488,
+    "ast_hash": "593641cd15e5ccb6f6575a6b748a4419",
     "semantic_hash": ""
   },
   "src/features/grafo/index.ts": {
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "src/layout/navigation.ts": {
-    "mtime": 1788911587.165351,
-    "seen": 1788912092.3579907,
-    "ast_hash": "758ced1bb50b7218efd24530a6ea02e2",
+    "mtime": 1788918599.676461,
+    "seen": 1788918896.5103974,
+    "ast_hash": "f5990db9e69180cb1a5a57d9d0ee59db",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788817864.118736,
-    "seen": 1788909923.7523859,
-    "ast_hash": "10495bfcc6c568eca4dab6dd5df795d3",
+    "mtime": 1788918889.1416297,
+    "seen": 1788918896.5133314,
+    "ast_hash": "5ac473200609f684dbeadc633aa3e6f7",
     "semantic_hash": ""
   },
   "index.html": {
@@ -738,15 +738,15 @@
     "semantic_hash": ""
   },
   "src/app/lazy-paginas.tsx": {
-    "mtime": 1788912919.769942,
-    "seen": 1788913447.2634585,
-    "ast_hash": "c4449ba231d0186df144881623b0b24d",
+    "mtime": 1788918581.6726289,
+    "seen": 1788918896.495793,
+    "ast_hash": "42d2ae912e0495c04d07e79d4cf4f8d2",
     "semantic_hash": ""
   },
   "scripts/teste-grafo.ts": {
-    "mtime": 1788915449.9248526,
-    "seen": 1788915464.3608005,
-    "ast_hash": "d5a4d61e301bd7dbd30fc9a84f795c30",
+    "mtime": 1788918652.5436728,
+    "seen": 1788918896.4950793,
+    "ast_hash": "ba1cbb761cb3ef350c41f796c088c173",
     "semantic_hash": ""
   },
   "src/core/grafo/constantes.ts": {
@@ -756,15 +756,15 @@
     "semantic_hash": ""
   },
   "src/core/grafo/grafo.ts": {
-    "mtime": 1788914939.285692,
-    "seen": 1788915464.3627388,
-    "ast_hash": "7f26a05166f4a0de37f2b571931b7dd9",
+    "mtime": 1788918555.038559,
+    "seen": 1788918896.5002837,
+    "ast_hash": "533ad5130f793c352647346089c6b575",
     "semantic_hash": ""
   },
   "src/core/grafo/index.ts": {
-    "mtime": 1788915013.1072562,
-    "seen": 1788915464.3627405,
-    "ast_hash": "ecf507a11cd034eba80f833e67df689a",
+    "mtime": 1788918560.3746388,
+    "seen": 1788918896.5002868,
+    "ast_hash": "9f1c912008eda1cfce0fd4efaec52e49",
     "semantic_hash": ""
   },
   "src/core/grafo/markdown-links.ts": {
@@ -774,9 +774,9 @@
     "semantic_hash": ""
   },
   "src/core/grafo/useMapaDeLinks.ts": {
-    "mtime": 1788915008.1828701,
-    "seen": 1788915464.362742,
-    "ast_hash": "2b001871387043ae964fc842fc4a6d8f",
+    "mtime": 1788918181.9284985,
+    "seen": 1788918896.5005412,
+    "ast_hash": "f6ddc193f8943bc9ed650c225fef9bda",
     "semantic_hash": ""
   },
   "src/core/markdown/DiagramaMermaid.tsx": {
@@ -786,15 +786,39 @@
     "semantic_hash": ""
   },
   "src/features/grafo/componentes/GrafoInterativo.tsx": {
-    "mtime": 1788915247.1758275,
-    "seen": 1788915464.3652742,
-    "ast_hash": "0459655184506719303734f149ec9201",
+    "mtime": 1788919013.6723602,
+    "seen": 1788919080.6054919,
+    "ast_hash": "92b95c3542c5be16113210e0fee17333",
     "semantic_hash": ""
   },
   "src/types/cytoscape-cola.d.ts": {
     "mtime": 1788915087.3937979,
     "seen": 1788915464.3684402,
     "ast_hash": "411f25b64320feefb6fab6c6e3549da0",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/stopwords.ts": {
+    "mtime": 1788918125.2837696,
+    "seen": 1788918896.5005362,
+    "ast_hash": "53db79063e9783b2021b0610d7826c8d",
+    "semantic_hash": ""
+  },
+  "src/core/grafo/termos.ts": {
+    "mtime": 1788918531.8259606,
+    "seen": 1788918896.5005383,
+    "ast_hash": "b40ae6bc6c9718fc00e8e7d316a31d2b",
+    "semantic_hash": ""
+  },
+  "src/features/nuvem/NuvemDePalavrasPage.tsx": {
+    "mtime": 1788918821.4622297,
+    "seen": 1788918896.507776,
+    "ast_hash": "deeaa5c69aa7d997ebc34615f3b08999",
+    "semantic_hash": ""
+  },
+  "src/features/grafo/componentes/AlternadorLayout.tsx": {
+    "mtime": 1788918991.6425185,
+    "seen": 1788919080.6054902,
+    "ast_hash": "a5a6a494f96d16dc03c950e7eba4f1b7",
     "semantic_hash": ""
   }
 }

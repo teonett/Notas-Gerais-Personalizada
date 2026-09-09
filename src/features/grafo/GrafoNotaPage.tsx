@@ -2,23 +2,25 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Route as RotaIcone } from 'lucide-react'
 import { PageHeader, EmptyState, Button, Badge } from '../../components/ui'
-import { notasStore, logger } from '../../core'
+import { notasStore, tagsStore, logger } from '../../core'
 import type { GrafoDeNotas } from '../../core/grafo'
-import { backlinksDe, construirGrafoDeNotas, vizinhancaDe } from '../../core/grafo'
+import { backlinksDe, construirGrafoDeNotas, TIPOS_RELACAO, vizinhancaDe } from '../../core/grafo'
+import { AlternadorLayout } from './componentes/AlternadorLayout'
+import type { ModoLayout } from './componentes/AlternadorLayout'
 import { GrafoInterativo } from './componentes/GrafoInterativo'
 
 export function GrafoNotaPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [grafo, setGrafo] = useState<GrafoDeNotas | null>(null)
+  const [layout, setLayout] = useState<ModoLayout>('cola')
 
   useEffect(() => {
     let ativo = true
-    notasStore
-      .listarTodas()
-      .then((todas) => {
+    Promise.all([notasStore.listarTodas(), tagsStore.listarTodas()])
+      .then(([todas, tags]) => {
         if (ativo) {
-          setGrafo(construirGrafoDeNotas(todas))
+          setGrafo(construirGrafoDeNotas(todas, tags))
         }
       })
       .catch(() => {
@@ -76,6 +78,10 @@ export function GrafoNotaPage() {
   }
 
   const backlinks = backlinksDe(nota.id, grafo)
+  const conexoesPorTipo = TIPOS_RELACAO.map((tipo) => ({
+    tipo,
+    quantidade: contexto.arestas.filter((relacao) => relacao.tipo === tipo).length,
+  }))
 
   return (
     <div className="space-y-6">
@@ -86,6 +92,18 @@ export function GrafoNotaPage() {
       <div className="flex flex-wrap items-center gap-2">
         <Badge cor="esmeralda">{`${contexto.nos.length} nós`}</Badge>
         <Badge cor="indigo">{`${backlinks.length} backlinks`}</Badge>
+        {conexoesPorTipo.some(({ quantidade }) => quantidade > 0) &&
+          conexoesPorTipo.map(
+            ({ tipo, quantidade }) =>
+              quantidade > 0 && (
+                <Badge key={tipo} cor={tipo === 'wikilink' ? 'indigo' : tipo === 'tag' ? 'esmeralda' : 'ambar'}>
+                  {`${quantidade} ${tipo}`}
+                </Badge>
+              ),
+          )}
+        <span className="ml-auto">
+          <AlternadorLayout valor={layout} aoAlterar={setLayout} />
+        </span>
         <Button variante="secundario" onClick={() => navigate(`/notas/${nota.id}`)}>
           Abrir nota
         </Button>
@@ -93,6 +111,8 @@ export function GrafoNotaPage() {
       <GrafoInterativo
         notas={contexto.nos}
         relacoes={contexto.arestas}
+        destaqueId={nota.id}
+        layout={layout}
         aoClicarNota={(notaId) => navigate(notaId === nota.id ? `/notas/${notaId}` : `/grafo/${notaId}`)}
       />
       {backlinks.length > 0 && (

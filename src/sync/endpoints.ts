@@ -73,7 +73,7 @@ export async function enviarPull(
 export async function enviarBlobAnexo(
   config: ConfiguracaoSync,
   id: string,
-  bytes: ArrayBuffer,
+  bytes: ArrayBuffer | Uint8Array<ArrayBuffer>,
   mime: string,
   nome: string,
 ): Promise<void> {

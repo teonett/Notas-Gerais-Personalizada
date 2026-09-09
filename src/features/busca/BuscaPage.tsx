@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, StickyNote } from 'lucide-react'
 import { EmptyState, Input, PageHeader } from '../../components/ui'
 import { LIMITS } from '../../config/limits'
@@ -9,8 +10,10 @@ import { useNotas } from '../notas/hooks'
 import { useTags } from '../tags/hooks'
 
 export function BuscaPage() {
-  const [termo, setTermo] = useState('')
-  const [termoEfetivo, setTermoEfetivo] = useState('')
+  const [parametros] = useSearchParams()
+  const termoInicial = parametros.get('termo') ?? ''
+  const [termo, setTermo] = useState(termoInicial)
+  const [termoEfetivo, setTermoEfetivo] = useState(termoInicial)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

@@ -1,7 +1,8 @@
 import type { Anexo } from '../domain'
 import { BANCO } from '../core/storage/config'
-import { abrirBancoDeDados } from '../core/storage/idb'
-import { comTransacao } from '../core/repositorios/base'
+import { gravarItem } from '../core/storage/idb'
+import { obterChaveDaSessao } from '../core/auth/sessao'
+import { decifrarBytes, ehEnvelope } from '../core/vault/cifrar'
 import type { RegistroSync } from './contrato'
 import { CHAVES_SINCRONIZACAO } from './contrato'
 import { apagarSincronizacao, listarPorPrefixo } from './armazenamento'
@@ -15,10 +16,7 @@ export interface ResultadoBlobs {
 }
 
 async function gravarAnexoSincronizado(anexo: Anexo): Promise<void> {
-  const banco = await abrirBancoDeDados()
-  await comTransacao(banco, [BANCO.stores.anexos], 'readwrite', async (transacao) => {
-    transacao.objectStore(BANCO.stores.anexos).put(anexo)
-  })
+  await gravarItem(BANCO.stores.anexos, anexo)
 }
 
 export async function processarBlobsPendentes(
@@ -30,22 +28,24 @@ export async function processarBlobsPendentes(
   for (const { chave, valor } of pendentes) {
     const registro = JSON.parse(valor) as RegistroSync
     try {
-      const blob = await baixarBlobAnexo(config, registro.id)
       const metadados = (registro.dados ?? {}) as DadosSyncAnexo
+      const mime =
+        metadados.mime !== undefined
+          ? String(metadados.mime)
+          : 'application/octet-stream'
+      const baixado = await baixarBlobAnexo(config, registro.id)
+      const dados = await recuperarBytesBaixados(await baixado.arrayBuffer())
       const anexo: Anexo = {
         id: registro.id,
         notaId: metadados.notaId ?? null,
         nome: metadados.nome !== undefined ? String(metadados.nome) : registro.id,
-        mime:
-          metadados.mime !== undefined
-            ? String(metadados.mime)
-            : 'application/octet-stream',
-        tamanho: blob.size,
+        mime,
+        tamanho: dados.byteLength,
         criadaEm:
           typeof metadados.criadaEm === 'string'
             ? metadados.criadaEm
             : new Date().toISOString(),
-        dados: blob,
+        dados: new Blob([dados], { type: mime }),
       }
       await gravarAnexoSincronizado(anexo)
       await marcarSincronizado(registro)
@@ -57,4 +57,19 @@ export async function processarBlobsPendentes(
   }
 
   return { baixados }
+}
+
+async function recuperarBytesBaixados(bytes: ArrayBuffer): Promise<ArrayBuffer> {
+  const chave = obterChaveDaSessao()
+  if (chave === null) {
+    return bytes
+  }
+  const bruto = JSON.parse(new TextDecoder().decode(bytes)) as unknown
+  if (!ehEnvelope(bruto)) {
+    return bytes
+  }
+  const dados = await decifrarBytes(chave, bruto)
+  const copia = new Uint8Array(dados.byteLength)
+  copia.set(dados)
+  return copia.buffer
 }

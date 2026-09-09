@@ -1,7 +1,6 @@
 import type { Nota } from '../../domain'
 import { gerarId, STATUS_NOTA } from '../../domain'
-import { abrirBancoDeDados } from '../storage/idb'
-import { comTransacao, requisicaoParaPromessa } from './base'
+import { apagarItem, gravarItem, lerItem, listarItens } from '../storage/idb'
 import { tagsStore } from './tags'
 import { registrarNota, registrarRemocao } from '../../sync/mudancas'
 
@@ -81,50 +80,32 @@ export const notasStore = {
   async criar(nova: NovaNota): Promise<Nota> {
     const agora = new Date().toISOString()
     const nota = objetoDaNota(nova, agora)
-    const banco = await abrirBancoDeDados()
-
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).put(nota)
-    })
+    await gravarItem(STORE, nota)
     await registrarNota(nota)
-
     return nota
   },
 
   async atualizar(id: string, mudancas: Partial<Omit<Nota, 'id'>>): Promise<Nota | undefined> {
-    const banco = await abrirBancoDeDados()
-
-    return comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      const existente = await requisicaoParaPromessa(store.get(id))
-      if (existente === undefined) {
-        return undefined
-      }
-      const atualizada: Nota = {
-        ...existente,
-        ...mudancas,
-        alteradaEm: new Date().toISOString(),
-      }
-      await requisicaoParaPromessa(store.put(atualizada))
-      await registrarNota(atualizada)
-      return atualizada
-    })
+    const existente = await lerItem<Nota>(STORE, id)
+    if (existente === undefined) {
+      return undefined
+    }
+    const atualizada: Nota = {
+      ...existente,
+      ...mudancas,
+      alteradaEm: new Date().toISOString(),
+    }
+    await gravarItem(STORE, atualizada)
+    await registrarNota(atualizada)
+    return atualizada
   },
 
   async obter(id: string): Promise<Nota | undefined> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      return requisicaoParaPromessa(store.get(id))
-    })
+    return lerItem<Nota>(STORE, id)
   },
 
   async listarTodas(): Promise<Nota[]> {
-    const banco = await abrirBancoDeDados()
-    return comTransacao(banco, [STORE], 'readonly', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      return requisicaoParaPromessa(store.getAll())
-    })
+    return listarItens<Nota>(STORE)
   },
 
   async listar(filtro: AFiltroNota = {}): Promise<Nota[]> {
@@ -150,13 +131,9 @@ export const notasStore = {
   },
 
   async remover(ids: string[]): Promise<void> {
-    const banco = await abrirBancoDeDados()
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      for (const id of ids) {
-        store.delete(id)
-      }
-    })
+    for (const id of ids) {
+      await apagarItem(STORE, id)
+    }
     for (const id of ids) {
       await registrarRemocao('nota', id)
     }
@@ -167,13 +144,9 @@ export const notasStore = {
     for (const nota of lixeira) {
       await registrarRemocao('nota', nota.id)
     }
-    const banco = await abrirBancoDeDados()
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      const store = transacao.objectStore(STORE)
-      for (const nota of lixeira) {
-        store.delete(nota.id)
-      }
-    })
+    for (const nota of lixeira) {
+      await apagarItem(STORE, nota.id)
+    }
   },
 
   async mudarStatus(id: string, status: Nota['status']): Promise<Nota | undefined> {
@@ -218,10 +191,7 @@ export const notasStore = {
       alteradaEm: agora,
       excluidaEm: null,
     }
-    const banco = await abrirBancoDeDados()
-    await comTransacao(banco, [STORE], 'readwrite', async (transacao) => {
-      transacao.objectStore(STORE).put(copia)
-    })
+    await gravarItem(STORE, copia)
     await registrarNota(copia)
     return copia
   },
