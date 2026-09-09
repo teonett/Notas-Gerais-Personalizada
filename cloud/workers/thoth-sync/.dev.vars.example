@@ -1,0 +1,2 @@
+# Copie este arquivo para `.dev.vars` e preencha o segredo usado em desenvolvimento local.
+SEGREDO=troque_por_um_segredo_forte

@@ -1,0 +1,19 @@
+{
+  "name": "thoth-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "d1_databases": [
+    {
+      "binding": "THOTH_DB",
+      "database_name": "thoth-sync",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "THOTH_ANEXOS",
+      "bucket_name": "thoth-sync-anexos"
+    }
+  ]
+}

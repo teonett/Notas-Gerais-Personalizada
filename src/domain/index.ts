@@ -1,0 +1,6 @@
+export * from './anexo'
+export * from './caderno'
+export * from './id'
+export * from './nota'
+export * from './tag'
+export * from './tipos'

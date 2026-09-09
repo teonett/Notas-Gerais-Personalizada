@@ -1,0 +1,1 @@
+export { MiniaturaAnexo, RotuloArquivo } from './MiniaturaAnexo'

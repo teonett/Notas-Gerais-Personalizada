@@ -1,0 +1,1 @@
+export { useEstadoSync } from './useEstadoSync'

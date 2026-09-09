@@ -1,0 +1,8 @@
+packages:
+  - "."
+  - "cloud/workers/thoth-sync"
+
+allowBuilds:
+  sharp: true
+  esbuild: true
+  workerd: true

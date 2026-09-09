@@ -1,0 +1,1 @@
+export { useNotas } from './useNotas'

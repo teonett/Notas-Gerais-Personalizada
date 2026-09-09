@@ -1,0 +1,20 @@
+{
+  "0": "ui/index.ts",
+  "1": "domain/index.ts",
+  "2": "dependencies",
+  "3": "TemaProvider.tsx",
+  "4": "ImportacaoExportacaoPage.tsx",
+  "5": "devDependencies",
+  "6": "compilerOptions",
+  "7": "errors/index.ts",
+  "8": "compilerOptions",
+  "9": "layout/index.ts",
+  "10": "idb.ts",
+  "11": "GrafoNotaPage.tsx",
+  "12": "plugins",
+  "13": "EditorPage.tsx",
+  "15": "React + TypeScript + Vite",
+  "16": "tsconfig.json",
+  "17": "vite-env.d.ts",
+  "18": "vite.config.ts"
+}
