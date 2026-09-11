@@ -203,6 +203,9 @@ npm run lint          # oxlint (0 warnings/erros)
 | Comando          | O que valida                                                               |
 | ---------------- | -------------------------------------------------------------------------- |
 | `npm run teste:grafo` | wikilinks, tags e termos (filtro por tipo), resolução de títulos, vizinhança, backlinks e plugin remark (25 passos) |
+| `npm run teste:auth`  | contas locais, criptografia em repouso, migração legada, bloqueio/desbloqueio e isolamento entre contas (34 passos) |
+| `npm run teste:intercambio` | importação/exportação em Markdown, TXT e HTML: separação e round-trip das notas; JSON: cadernos (com aninhamento), tags, notas, escopos de exportação e restauração fiel (46 passos) |
+| `npm run teste:nuvem` | filtro de stopwords, normalização, limite do top e persistência das preferências da nuvem (14 passos) |
 | `npm run teste:e2e`   | sincronização ponta a ponta entre dois dispositivos falsos + Worker local (`wrangler dev --local`), 9 passos |
 
 ## Sincronização (backend)
@@ -220,12 +223,41 @@ O Worker `thoth-sync` expõe uma API autenticada por **segredo compartilhado**
 
 ### Deploy
 
-1. Crie o banco D1 e o bucket R2 e preencha `database_id` em
-   `wrangler.jsonc` (hoje está como placeholder).
-2. Defina a variável `SEGREDO` (ver segredos do Worker).
-3. Publique com `wrangler deploy` em `cloud/workers/thoth-sync`.
-4. No app, configure a URL do Worker e o segredo em **Sincronização**
-   (`/sincronizar`).
+O Worker e o app já estão publicados:
+
+- App (Pages): <https://thothnet.pages.dev>
+- Worker de sync: <https://thoth-sync.teonett.workers.dev>
+- D1: `thoth-sync` · R2: `thoth-sync-anexos`
+
+Passo a passo completo (terminal), a partir de `ThothNet/`:
+
+```bash
+# 1. Dependências e checagens
+pnpm install
+npm run lint
+npm run build
+
+# 2. Backend — aplicar migrations e publicar o Worker
+cd cloud/workers/thoth-sync
+npx wrangler login                                   # uma vez por máquina
+npx wrangler d1 migrations apply thoth-sync --remote # schema no D1 de produção
+npx wrangler secret put SEGREDO                      # digite o segredo compartilhado
+npx wrangler deploy                                  # -> thoth-sync.<conta>.workers.dev
+
+# 3. Frontend — publicar o app no Cloudflare Pages
+cd ../..
+npx wrangler pages deploy dist --project-name thothnet
+# (primeira vez: npx wrangler pages project create thothnet --production-branch master)
+
+# 4. Validação rápida
+curl -s -o /dev/null -w "%{http_code}\n" https://thothnet.pages.dev
+curl -s -X POST -H "Authorization: Bearer $SEGREDO" \
+  https://thoth-sync.teonett.workers.dev/api/sync/pull   # deve devolver {"mudancas":[]}
+```
+
+No app, configure a URL do Worker e o mesmo segredo em **Sincronização**
+(`/sincronizar`). O `wrangler` é dependência do Worker; a partir da raiz use o
+binário em `cloud/workers/thoth-sync/node_modules/.bin/wrangler`.
 
 No desenvolvimento local, o `garantirSchema()` do Worker aplica o schema
 idempotentemente — as migrations em `migrations/` servem para o ambiente

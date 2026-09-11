@@ -13,6 +13,7 @@ import {
   Paperclip,
   PenLine,
   Pin,
+  Save,
   Star,
   Tag as TagIcon,
   Trash2,
@@ -60,6 +61,7 @@ export function EditorPage() {
   const { itens: anexos, recarregar: recarregarAnexos } = useAnexos(nota === null ? undefined : nota.id)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const timerAutosaveRef = useRef<number | undefined>(undefined)
   const inputImagemRef = useRef<HTMLInputElement>(null)
   const inputArquivoRef = useRef<HTMLInputElement>(null)
   const [anexando, setAnexando] = useState(false)
@@ -197,7 +199,7 @@ export function EditorPage() {
       return
     }
 
-    const timer = window.setTimeout(() => {
+    timerAutosaveRef.current = window.setTimeout(() => {
       setEstadoSalvamento('salvando')
       notasStore
         .atualizar(nota.id, { titulo, conteudo })
@@ -211,8 +213,33 @@ export function EditorPage() {
           setEstadoSalvamento('erro')
         })
     }, PREFERENCIAS.autosaveDebounceMs)
-    return () => window.clearTimeout(timer)
+    return () => {
+      if (timerAutosaveRef.current !== undefined) {
+        window.clearTimeout(timerAutosaveRef.current)
+        timerAutosaveRef.current = undefined
+      }
+    }
   }, [titulo, conteudo, carregada, idNota, nota])
+
+  const salvarAgora = async (): Promise<void> => {
+    if (!carregada || idNota === null || nota === null) {
+      return
+    }
+    if (timerAutosaveRef.current !== undefined) {
+      window.clearTimeout(timerAutosaveRef.current)
+      timerAutosaveRef.current = undefined
+    }
+    setEstadoSalvamento('salvando')
+    try {
+      const atualizada = await notasStore.atualizar(nota.id, { titulo, conteudo })
+      if (atualizada !== undefined) {
+        setNota(atualizada)
+        setEstadoSalvamento('salvo')
+      }
+    } catch {
+      setEstadoSalvamento('erro')
+    }
+  }
 
   if (!carregada || nota === null) {
     return (
@@ -295,6 +322,14 @@ export function EditorPage() {
               {textoSalvamento}
             </span>
           )}
+          <Button
+            tamanho="sm"
+            onClick={() => void salvarAgora()}
+            disabled={estadoSalvamento === 'salvando'}
+          >
+            <Save className="size-4" aria-hidden="true" />
+            Salvar
+          </Button>
           <div className="mx-2 hidden h-4 w-px bg-slate-300 dark:bg-slate-700 sm:block" />
           <div className="hidden gap-1 rounded-lg border border-slate-300 p-0.5 dark:border-slate-700 sm:inline-flex">
             <BotaoModoVisualizacao ativo={modoVisualizacao === 'editar'} aoClicar={() => setModoVisualizacao('editar')} rotulo="Editar" icone={PenLine} />

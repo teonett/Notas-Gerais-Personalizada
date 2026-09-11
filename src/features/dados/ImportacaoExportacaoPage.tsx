@@ -10,9 +10,15 @@ import {
   montarTextoDeNotas,
   tituloDoArquivo,
 } from '../../core/dados/intercambio'
-import { notasStore } from '../../core'
+import {
+  importarDadosJson,
+  montarJson,
+  parseJsonIntercambio,
+} from '../../core/dados/json'
+import type { EscopoExportacaoJson } from '../../core/dados/json'
+import { cadernosStore, notasStore, tagsStore } from '../../core'
 
-type FormatoExportacao = FormatoNota
+type FormatoExportacao = FormatoNota | 'JSON'
 type EscopoExportacao = 'ATIVAS' | 'ARQUIVADAS' | 'TODAS'
 
 const EXTENSAO_PARA_FORMATO: Record<string, FormatoNota | 'MARKDOWN'> = {
@@ -40,9 +46,18 @@ export function ImportacaoExportacaoPage() {
       for (const arquivo of Array.from(arquivos)) {
         try {
           const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? ''
+          const texto = await arquivo.text()
+          if (extensao === 'json') {
+            const dados = parseJsonIntercambio(texto)
+            if (dados === null) {
+              throw new Error('arquivo JSON inválido')
+            }
+            const resumo = await importarDadosJson(dados)
+            importadas += resumo.notasCriadas
+            continue
+          }
           const tipo = EXTENSAO_PARA_FORMATO[extensao] ?? FORMATO_NOTA.TXT
           const ehHtml = extensao === 'html' || extensao === 'htm'
-          const texto = await arquivo.text()
           const dividido = dividirNotasDoArquivo(extensao, texto)
           const plano = dividido ?? [
             {
@@ -77,6 +92,7 @@ export function ImportacaoExportacaoPage() {
 
   const [formatoExportacao, setFormatoExportacao] = useState<FormatoExportacao>('MARKDOWN')
   const [escopoExportacao, setEscopoExportacao] = useState<EscopoExportacao>('TODAS')
+  const [escopoJson, setEscopoJson] = useState<EscopoExportacaoJson>('TUDO')
 
   const exportar = useCallback(async () => {
     setExportando(true)
@@ -91,8 +107,34 @@ export function ImportacaoExportacaoPage() {
         })
         .sort((a, b) => b.alteradaEm.localeCompare(a.alteradaEm))
 
-      if (selecionadas.length === 0) {
+      const ehJson = formatoExportacao === 'JSON'
+
+      if (selecionadas.length === 0 && escopoJson !== 'CADERNOS') {
         setMensagem('Nenhuma nota no escopo selecionado para exportar.')
+        return
+      }
+
+      if (ehJson) {
+        const [cadernos, tags] = await Promise.all([
+          cadernosStore.listarTodas(),
+          tagsStore.listarTodas(),
+        ])
+        const texto = montarJson(cadernos, tags, selecionadas, escopoJson)
+        const data = new Date().toISOString().slice(0, 10)
+        const blob = new Blob([texto], { type: 'application/json;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `thothnet-notas-${data}.json`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        URL.revokeObjectURL(url)
+        setMensagem(
+          escopoJson === 'CADERNOS'
+            ? `${cadernos.length} caderno${cadernos.length === 1 ? '' : 's'} exportado${cadernos.length === 1 ? '' : 's'} em JSON.`
+            : `${selecionadas.length} nota${selecionadas.length === 1 ? '' : 's'} e ${cadernos.length} caderno${cadernos.length === 1 ? '' : 's'}${escopoJson === 'TUDO' ? ` e ${tags.length} tag${tags.length === 1 ? '' : 's'}` : ''} exportado${selecionadas.length === 1 ? '' : 's'} em JSON.`,
+        )
         return
       }
 
@@ -118,7 +160,7 @@ export function ImportacaoExportacaoPage() {
     } finally {
       setExportando(false)
     }
-  }, [formatoExportacao, escopoExportacao])
+  }, [formatoExportacao, escopoExportacao, escopoJson])
 
   const selectClasse =
     'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
@@ -139,16 +181,18 @@ export function ImportacaoExportacaoPage() {
             <h2 className="text-sm font-semibold">Importar arquivos</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Arquivos <code className="text-slate-700 dark:text-slate-300">.txt</code>{' '}
-              <code className="text-slate-700 dark:text-slate-300">.md</code> e
-              <code className="text-slate-700 dark:text-slate-300"> .html</code> viram notas.
+              <code className="text-slate-700 dark:text-slate-300">.md</code>,{' '}
+              <code className="text-slate-700 dark:text-slate-300">.html</code> e
+              <code className="text-slate-700 dark:text-slate-300"> .json</code> viram notas.
               Arquivos exportados pelo próprio app com várias notas são separados em notas
-              individuais. Você pode selecionar vários arquivos de uma vez.
+              individuais; arquivos <code className="text-slate-700 dark:text-slate-300">.json</code>{' '}
+              restauram cadernos, tags e notas. Você pode selecionar vários arquivos de uma vez.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <input
                 ref={inputRef}
                 type="file"
-                accept=".txt,.md,.markdown,.html,.htm"
+                accept=".txt,.md,.markdown,.html,.htm,.json"
                 multiple
                 onChange={(e) => void importar(e.target.files)}
                 className="max-w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white file:transition-colors hover:file:bg-indigo-700 dark:text-slate-300"
@@ -167,8 +211,9 @@ export function ImportacaoExportacaoPage() {
           <div className="flex-1">
             <h2 className="text-sm font-semibold">Exportar notas</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Gere um arquivo com todas as notas do escopo. O arquivo também pode ser reimportado:
-              cada nota volta separada.
+              Gere um arquivo com as notas do escopo. No formato JSON é possível exportar
+              cadernos, notas ou o backup completo (notas + cadernos + tags), e tudo pode ser
+              reimportado tal qual está hoje.
             </p>
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1.5 text-sm">
@@ -181,6 +226,7 @@ export function ImportacaoExportacaoPage() {
                   <option value={FORMATO_NOTA.MARKDOWN}>Markdown (.md)</option>
                   <option value={FORMATO_NOTA.TXT}>Texto puro (.txt)</option>
                   <option value={FORMATO_NOTA.HTML}>HTML (.html)</option>
+                  <option value="JSON">JSON (.json)</option>
                 </select>
               </label>
               <label className="flex flex-col gap-1.5 text-sm">
@@ -195,6 +241,22 @@ export function ImportacaoExportacaoPage() {
                   <option value="ARQUIVADAS">Somente arquivadas</option>
                 </select>
               </label>
+              {formatoExportacao === 'JSON' && (
+                <label className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium text-slate-700 dark:text-slate-200">
+                    O que exportar
+                  </span>
+                  <select
+                    value={escopoJson}
+                    onChange={(e) => setEscopoJson(e.target.value as EscopoExportacaoJson)}
+                    className={selectClasse}
+                  >
+                    <option value="TUDO">Notas + cadernos + tags</option>
+                    <option value="CADERNOS">Somente cadernos</option>
+                    <option value="NOTAS">Somente notas</option>
+                  </select>
+                </label>
+              )}
               <Button onClick={() => void exportar()} disabled={exportando}>
                 <FileDown className="size-4" aria-hidden="true" />
                 {exportando ? 'Exportando…' : 'Exportar'}

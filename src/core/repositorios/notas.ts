@@ -14,7 +14,7 @@ export interface AFiltroNota {
 }
 
 export type NovaNota = Pick<Nota, 'titulo' | 'conteudo' | 'formato'> &
-  Partial<Pick<Nota, 'cadernoId' | 'tagIds'>>
+  Partial<Pick<Nota, 'cadernoId' | 'tagIds' | 'status' | 'favorita' | 'fixada'>>
 
 const STORE = 'notas'
 
@@ -31,9 +31,9 @@ function objetoDaNota(nova: NovaNota, agora: string): Nota {
     titulo: nova.titulo.trim(),
     conteudo: nova.conteudo,
     formato: nova.formato,
-    status: STATUS_NOTA.ATIVA,
-    favorita: false,
-    fixada: false,
+    status: nova.status ?? STATUS_NOTA.ATIVA,
+    favorita: nova.favorita ?? false,
+    fixada: nova.fixada ?? false,
     cadernoId: nova.cadernoId ?? null,
     tagIds: nova.tagIds ?? [],
     criadaEm: agora,

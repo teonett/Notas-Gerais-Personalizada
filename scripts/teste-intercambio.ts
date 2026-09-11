@@ -1,10 +1,19 @@
-import { FORMATO_NOTA } from '../src/domain/tipos'
+import { IDBFactory } from 'fake-indexeddb'
+import { FORMATO_NOTA, STATUS_NOTA } from '../src/domain/tipos'
 import {
   dividirNotasDoArquivo,
   montarTextoDeNotas,
   tituloDoArquivo,
 } from '../src/core/dados/intercambio'
 import type { NotaEmArquivo } from '../src/core/dados/intercambio'
+import {
+  importarDadosJson,
+  montarJson,
+  parseJsonIntercambio,
+} from '../src/core/dados/json'
+import { cadernosStore } from '../src/core/repositorios/cadernos'
+import { notasStore } from '../src/core/repositorios/notas'
+import { tagsStore } from '../src/core/repositorios/tags'
 
 let passos = 0
 
@@ -94,3 +103,131 @@ const divididoVazias = notasDoArquivo('md', notasVazias)
 passo('nota sem conteúdo também separa', divididoVazias?.length === 2 && divididoVazias?.[0].conteudo === '')
 
 console.log(`\n${passos} passos de intercâmbio passaram.`)
+
+// ---------- intercâmbio JSON (cadernos, tags e notas) ----------
+
+const g = globalThis as typeof globalThis & {
+  window?: unknown
+  indexedDB?: unknown
+}
+g.window = globalThis
+g.indexedDB = new IDBFactory()
+
+async function mainJson(): Promise<void> {
+  const casa = await cadernosStore.criar('Casa')
+  const filhos = await cadernosStore.criar('Filhos', casa.id)
+  const trabalho = await cadernosStore.criar('Trabalho')
+  const importante = await tagsStore.criar('importante')
+  const urgente = await tagsStore.criar('urgente')
+
+  await notasStore.criar({
+    titulo: 'Plano da casa',
+    conteudo: 'orçar pintura da cozinha',
+    formato: FORMATO_NOTA.MARKDOWN,
+    cadernoId: filhos.id,
+    tagIds: [importante.id],
+  })
+  await notasStore.criar({
+    titulo: 'Reunião de quinta',
+    conteudo: 'pauta do projeto',
+    formato: FORMATO_NOTA.MARKDOWN,
+    cadernoId: trabalho.id,
+    tagIds: [urgente.id],
+    status: STATUS_NOTA.ARQUIVADA,
+    favorita: true,
+    fixada: true,
+  })
+
+  const entradas = await notasStore.listarTodas()
+  const todosOsCadernos = await cadernosStore.listarTodas()
+  const todasAsTags = await tagsStore.listarTodas()
+
+  const textoJson = montarJson(todosOsCadernos, todasAsTags, entradas, 'TUDO')
+  const dados = parseJsonIntercambio(textoJson)
+
+  passo('json export completo tem os 3 cadernos', dados?.cadernos.length === 3)
+  passo('json export completo tem as 2 tags', dados?.tags.length === 2)
+  passo('json export completo tem as 2 notas', dados?.notas.length === 2)
+
+  const nota0 = dados?.notas.find((n) => n.titulo === 'Plano da casa')
+  passo('json preserva caderno da nota', nota0?.caderno === 'Filhos')
+  passo('json preserva tags da nota', nota0?.tags.includes('importante') === true)
+
+  const nota1 = dados?.notas.find((n) => n.titulo === 'Reunião de quinta')
+  passo(
+    'json preserva caderno por nome',
+    nota1?.caderno === 'Trabalho',
+  )
+  passo(
+    'json preserva status, favorita e fixada',
+    nota1?.status === 'ARQUIVADA' && nota1?.favorita === true && nota1?.fixada === true,
+  )
+
+  const nomesJson = (dados?.cadernos ?? []).map((c) => c.nome)
+  passo('pai vem antes do filho no caderno json', nomesJson.indexOf('Casa') < nomesJson.indexOf('Filhos'))
+  const filhoJson = dados?.cadernos.find((c) => c.nome === 'Filhos')
+  passo('pai é exportado pelo nome', filhoJson?.pai === 'Casa')
+
+  if (dados !== null) {
+    const antes = await notasStore.listarTodas()
+    const resumo = await importarDadosJson(dados)
+    const depois = await notasStore.listarTodas()
+    const novas = depois.filter((n) => !antes.some((o) => o.id === n.id))
+
+    passo(
+      'import reutiliza cadernos e tags existentes',
+      resumo.cadernosCriados === 0 && resumo.tagsCriadas === 0,
+    )
+    passo('import adiciona as notas do arquivo', resumo.notasCriadas === 2)
+    passo(
+      'import não duplica cadernos nem tags',
+      (await cadernosStore.listarTodas()).length === 3 && (await tagsStore.listarTodas()).length === 2,
+    )
+    passo(
+      'import reaplica caderno e tags nas notas novas',
+      novas.length === 2 && novas.every((n) => n.cadernoId !== null && n.tagIds.length === 1),
+    )
+    const idsCadernos = new Map((await cadernosStore.listarTodas()).map((c) => [c.nome, c.id]))
+    passo(
+      'import restaura o pai aninhado do caderno',
+      filhoJson?.nome === undefined ||
+        (await cadernosStore.obter(idsCadernos.get('Filhos') ?? '') )?.paiId ===
+          idsCadernos.get('Casa'),
+    )
+    passo(
+      'import restaura status e favorita',
+      novas.every(
+        (n) =>
+          (n.titulo === 'Reunião de quinta' && n.status === 'ARQUIVADA' && n.favorita) ||
+          (n.titulo === 'Plano da casa' && n.status === 'ATIVA'),
+      ),
+    )
+  }
+
+  const soCadernos = parseJsonIntercambio(
+    montarJson(todosOsCadernos, todasAsTags, entradas, 'CADERNOS'),
+  )
+  passo(
+    'escopo cadernos traz só cadernos',
+    soCadernos?.cadernos.length === 3 &&
+      (soCadernos?.tags.length ?? -1) === 0 &&
+      (soCadernos?.notas.length ?? -1) === 0,
+  )
+
+  const soNotas = parseJsonIntercambio(montarJson(todosOsCadernos, todasAsTags, entradas, 'NOTAS'))
+  passo(
+    'escopo notas traz só notas sem vínculos',
+    soNotas?.notas.length === 2 &&
+      soNotas?.notas.every((n) => n.caderno === null && n.tags.length === 0),
+  )
+
+  passo('json inválido é rejeitado', parseJsonIntercambio('isto não é json') === null)
+  passo('json sem versão 1 é rejeitado', parseJsonIntercambio('{"versao":2,"notas":[]}') === null)
+  passo(
+    'json incompleto usa seções vazias',
+    parseJsonIntercambio('{"versao":1}')?.cadernos.length === 0,
+  )
+
+  console.log(`\nTotal: ${passos} passos de intercâmbio (texto e JSON) passaram.`)
+}
+void mainJson()

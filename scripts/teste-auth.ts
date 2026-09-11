@@ -1,6 +1,5 @@
 import { IDBFactory } from 'fake-indexeddb'
 import { AppError, ERROR_CODES } from '../src/core/errors'
-import type { Nota } from '../src/domain'
 import { listarContas } from '../src/core/auth/contas'
 import {
   bloquear,
@@ -105,10 +104,14 @@ async function main() {
     conteudo: 'segredo da conta ana',
     formato: 'MARKDOWN',
   })
-  const novaEmBruto = (await registrosBrutosDaLoja(BANCO.stores.notas)).find((r) =>
-    ehEnvelope(r),
+  const novaEmBruto = (await registrosBrutosDaLoja(BANCO.stores.notas)).find(
+    (r) => ehEnvelope(r) && (r as { id?: string }).id === nova.id,
   )
-  passo('nota criada já nasce cifrada', cameraEnvelopeEContemNova(novaEmBruto, nova))
+  passo(
+    'nota criada já nasce cifrada',
+    novaEmBruto !== undefined &&
+      JSON.stringify(novaEmBruto).includes('Nota do cofre') === false,
+  )
 
   await bloquear()
   passo('bloquear fecha a sessão', !estaDesbloqueada())
@@ -204,14 +207,6 @@ async function main() {
   passo('conta bia sobrevive à remoção da ana', estaDesbloqueada())
 
   console.log(`\n${passos} passos de auth passaram.`)
-}
-
-function cameraEnvelopeEContemNova(valor: unknown, nota: Nota): boolean {
-  return (
-    ehEnvelope(valor) &&
-    JSON.stringify(valor).includes('Nota do cofre') === false &&
-    JSON.stringify(valor).includes(nota.id) === false
-  )
 }
 
 main().catch((erro: unknown) => {
