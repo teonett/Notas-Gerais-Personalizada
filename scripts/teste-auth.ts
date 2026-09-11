@@ -149,7 +149,7 @@ async function main() {
   passo('anexo também fica cifrado no banco', brutosAnexos.every(ehEnvelope))
 
   await bloquear()
-  const bia = await criarContaLocal('bia', 'outra-senha-456')
+  await criarContaLocal('bia', 'outra-senha-456')
   passo('segunda conta é isolada (sem notas)', (await notasStore.listarTodas()).length === 0)
   await notasStore.criar({
     titulo: 'Nota da bia',

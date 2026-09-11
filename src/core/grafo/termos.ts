@@ -23,15 +23,20 @@ export function obterTokens(texto: string): string[] {
   return normalizarTextoBruto(texto).match(/[a-z0-9]{4,}/g) ?? []
 }
 
-function eTermoUtil(termo: string): boolean {
-  return !STOPWORDS.has(termo)
+const STOPWORDS_ADICIONAIS_VAZIAS: ReadonlySet<string> = new Set()
+
+function eTermoUtil(termo: string, extras: ReadonlySet<string>): boolean {
+  return !STOPWORDS.has(termo) && !extras.has(termo)
 }
 
 function limiteDeFrequencia(totalDeNotas: number): number {
   return Math.max(2, Math.floor(totalDeNotas * FRACAO_MAXIMA_TERMO))
 }
 
-export function listarFrequenciasDeTermos(todas: Nota[]): FrequenciaDeTermo[] {
+export function listarFrequenciasDeTermos(
+  todas: Nota[],
+  extras: ReadonlySet<string> = STOPWORDS_ADICIONAIS_VAZIAS,
+): FrequenciaDeTermo[] {
   const notasAtivas = todas.filter((nota) => nota.status === STATUS_NOTA.ATIVA)
   const ocorrencias = new Map<string, { peso: number; notas: Map<string, number> }>()
 
@@ -44,7 +49,7 @@ export function listarFrequenciasDeTermos(todas: Nota[]): FrequenciaDeTermo[] {
       pesosDaNota.set(token, (pesosDaNota.get(token) ?? 0) + 1)
     }
     for (const [termo, peso] of pesosDaNota) {
-      if (!eTermoUtil(termo)) {
+      if (!eTermoUtil(termo, extras)) {
         continue
       }
       const atual = ocorrencias.get(termo)

@@ -10,6 +10,8 @@
     "teste:e2e": "tsx scripts/teste-sync-e2e.ts",
     "teste:grafo": "tsx scripts/teste-grafo.ts",
     "teste:auth": "tsx scripts/teste-auth.ts",
+    "teste:intercambio": "tsx scripts/teste-intercambio.ts",
+    "teste:nuvem": "tsx scripts/teste-nuvem.ts",
     "preview": "vite preview",
     "generate:icons": "pwa-assets-generator -p minimal public/logo.svg"
   },

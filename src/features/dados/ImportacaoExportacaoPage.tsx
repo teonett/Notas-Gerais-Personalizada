@@ -2,9 +2,14 @@ import { useCallback, useRef, useState } from 'react'
 import { FileDown, FileUp } from 'lucide-react'
 import { Button, Card, PageHeader } from '../../components/ui'
 import { LIMITS } from '../../config/limits'
-import { htmlParaMarkdown, markdownParaHtml } from '../../core/markdown'
-import type { FormatoNota, Nota } from '../../domain'
+import { htmlParaMarkdown } from '../../core/markdown'
+import type { FormatoNota } from '../../domain'
 import { FORMATO_NOTA, STATUS_NOTA } from '../../domain'
+import {
+  dividirNotasDoArquivo,
+  montarTextoDeNotas,
+  tituloDoArquivo,
+} from '../../core/dados/intercambio'
 import { notasStore } from '../../core'
 
 type FormatoExportacao = FormatoNota
@@ -16,19 +21,6 @@ const EXTENSAO_PARA_FORMATO: Record<string, FormatoNota | 'MARKDOWN'> = {
   markdown: 'MARKDOWN',
   html: 'MARKDOWN',
   htm: 'MARKDOWN',
-}
-
-function tituloArquivo(nomeArquivo: string): string {
-  const semExtensao = nomeArquivo.replace(/\.[^.]+$/, '').trim()
-  const limitado = semExtensao.slice(0, LIMITS.tituloNotaMaxCaracteres).trim()
-  return limitado === '' ? 'Sem título' : limitado
-}
-
-function exportarParaTexto(nota: Nota): string {
-  if (nota.formato === FORMATO_NOTA.HTML) {
-    return nota.conteudo.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  }
-  return nota.conteudo
 }
 
 export function ImportacaoExportacaoPage() {
@@ -49,21 +41,30 @@ export function ImportacaoExportacaoPage() {
         try {
           const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? ''
           const tipo = EXTENSAO_PARA_FORMATO[extensao] ?? FORMATO_NOTA.TXT
+          const ehHtml = extensao === 'html' || extensao === 'htm'
           const texto = await arquivo.text()
-          const conteudo = tipo === 'MARKDOWN' ? htmlParaMarkdown(texto) : texto
-          await notasStore.criar({
-            titulo: tituloArquivo(arquivo.name),
-            conteudo,
-            formato: tipo === 'MARKDOWN' ? FORMATO_NOTA.MARKDOWN : tipo,
-          })
-          importadas += 1
+          const dividido = dividirNotasDoArquivo(extensao, texto)
+          const plano = dividido ?? [
+            {
+              titulo: tituloDoArquivo(arquivo.name),
+              conteudo: ehHtml ? htmlParaMarkdown(texto) : texto,
+            },
+          ]
+          for (const nota of plano) {
+            await notasStore.criar({
+              titulo: nota.titulo === '' ? 'Sem título' : nota.titulo.slice(0, LIMITS.tituloNotaMaxCaracteres),
+              conteudo: nota.conteudo,
+              formato: tipo === 'MARKDOWN' ? FORMATO_NOTA.MARKDOWN : tipo,
+            })
+            importadas += 1
+          }
         } catch {
           comErro += 1
         }
       }
       setMensagem(
-        `${importadas} arquivo${importadas === 1 ? '' : 's'} importado${importadas === 1 ? '' : 's'}${
-          comErro > 0 ? `, ${comErro} com erro` : ''
+        `${importadas} nota${importadas === 1 ? '' : 's'} importada${importadas === 1 ? '' : 's'}${
+          comErro > 0 ? `, ${comErro} arquivo${comErro === 1 ? '' : 's'} com erro` : ''
         }.`,
       )
     } finally {
@@ -95,26 +96,11 @@ export function ImportacaoExportacaoPage() {
         return
       }
 
-      const linhas: string[] = []
-      for (const nota of selecionadas) {
-        const titulo = nota.titulo.trim() === '' ? 'Sem título' : nota.titulo
-        if (formatoExportacao === 'MARKDOWN') {
-          linhas.push(`# ${titulo}`, '')
-          linhas.push(nota.conteudo.trim(), '', '---', '')
-        } else if (formatoExportacao === 'TXT') {
-          linhas.push(`== ${titulo} ==`, '', exportarParaTexto(nota), '', '')
-        } else {
-          const corpo =
-            nota.formato === FORMATO_NOTA.HTML
-              ? nota.conteudo
-              : markdownParaHtml(nota.conteudo)
-          linhas.push(`<article><h1>${titulo}</h1>${corpo}</article>`)
-        }
-      }
+      const texto = montarTextoDeNotas(selecionadas, formatoExportacao)
 
       const extensao = formatoExportacao === 'MARKDOWN' ? 'md' : formatoExportacao.toLowerCase()
       const data = new Date().toISOString().slice(0, 10)
-      const blob = new Blob([linhas.join('\n')], {
+      const blob = new Blob([texto], {
         type:
           formatoExportacao === 'HTML'
             ? 'text/html;charset=utf-8'
@@ -155,7 +141,8 @@ export function ImportacaoExportacaoPage() {
               Arquivos <code className="text-slate-700 dark:text-slate-300">.txt</code>{' '}
               <code className="text-slate-700 dark:text-slate-300">.md</code> e
               <code className="text-slate-700 dark:text-slate-300"> .html</code> viram notas.
-              HTML é convertido para Markdown. Você pode selecionar vários arquivos de uma vez.
+              Arquivos exportados pelo próprio app com várias notas são separados em notas
+              individuais. Você pode selecionar vários arquivos de uma vez.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <input
@@ -180,7 +167,8 @@ export function ImportacaoExportacaoPage() {
           <div className="flex-1">
             <h2 className="text-sm font-semibold">Exportar notas</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Gere um único arquivo com suas notas no formato escolhido.
+              Gere um arquivo com todas as notas do escopo. O arquivo também pode ser reimportado:
+              cada nota volta separada.
             </p>
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1.5 text-sm">

@@ -12,6 +12,12 @@ notas entre dispositivos e por meio de um grafo de conhecimento.
   acentuação (busca por `organizacao` encontra *organização*).
 - **Anexos** locais (imagens e arquivos) armazenados no IndexedDB e exibidos
   como blobs no editor.
+- **Contas locais com criptografia** (`/seguranca`): cada conta usa uma senha
+  (PBKDF2 310k iterações + AES-256-GCM) para cifrar todo o conteúdo no
+  IndexedDB — sem a senha, os dados da conta não podem ser lidos novamente.
+  Várias contas no mesmo dispositivo ficam totalmente isoladas.
+- **Sincronização de ponta a ponta**: além de cifrado em repouso, o conteúdo
+  viaja cifrado até o Worker — o servidor nunca vê o texto puro das notas.
 - **Markdown enriquecido**: wikilinks `[[Título]]`, blocos **Mermaid** e
   tabelas/GFM.
 - **Grafo de conhecimento**: nós = notas; arestas por wikilinks `[[Título]]`,
@@ -19,11 +25,28 @@ notas entre dispositivos e por meio de um grafo de conhecimento.
   alternância de layout (automático ou círculos concêntricos); visão
   global (`/grafo`) e contextual (`/grafo/:id`) com backlinks.
 - **Nuvem de palavras** (`/nuvem`): os termos mais recorrentes das notas em uma
-  nuvem colorida — clique em uma palavra para buscar as notas relacionadas.
+  nuvem colorida — clique em uma palavra para buscar as notas relacionadas. Uma
+  seção de parâmetros permite ajustar quantos termos aparecem (top, padrão 100)
+  e gerenciar palavras a ignorar, salvas por conta.
 - **Sincronização** entre dispositivos via Cloudflare Worker (D1 + R2),
   offline-first com conflitos resolvidos por revisão vencedora (LWW).
 - **Importação e exportação**: Markdown, HTML e JSON.
 - **PWA**: instalável, com service worker (precache) e suporte a modo escuro.
+
+## Contas e criptografia
+
+Ao criar a primeira conta, o app migra os dados existentes no banco anterior
+para o cofre criptografado da conta (**dados migrados não são apagados do banco
+antigo**). A partir daí:
+
+- Todo registro gravado no IndexedDB é um envelope AES-256-GCM (`{v, iv, dados}`),
+  incluindo anexos (Blob serializado em base64) e metadados de sincronização.
+- A chave é derivada da senha com PBKDF2 (SHA-256, 310k iterações); um
+  verificador derivado da mesma material nunca é armazenado em texto puro.
+- O botão de bloquear no cabeçalho (ou em **Segurança**) encerra a sessão: as
+  telas voltam para o login e qualquer escrita/leitura dos dados cifrados é
+  bloqueada até a senha ser digitada de novo.
+- **A senha não é recuperável**: perda de senha = dados da conta ilegíveis.
 
 ## Arquitetura
 
@@ -45,11 +68,13 @@ flowchart LR
 
 - **`domain`** — entidades (`Nota`, `Caderno`, `Tag`, `Anexo`) e constantes
   (`StatusNota`, `FormatoNota`).
-- **`core`** — acesso à camada de dados (IndexedDB), renderização de Markdown,
-  extração de wikilinks/grafo e tratamento de erros.
-- **`sync`** — fila de mudanças, revisões e transporte para o servidor.
+- **`core`** — acesso à camada de dados (IndexedDB), criptografia em repouso
+  (`vault` + `auth`: contas, sessão, verificação de senha), renderização de
+  Markdown, extração de wikilinks/grafo e tratamento de erros.
+- **`sync`** — fila de mudanças, revisões, transporte para o servidor (com o
+  conteúdo cifrado de ponta a ponta usando a chave da sessão).
 - **`features`** — telas (notas, cadernos, tags, busca, anexos, grafo, status,
-  importar/exportar, sincronização).
+  importar/exportar, sincronização, login/segurança).
 - **`app`** — rotas com *code splitting* (todas as páginas são carregadas sob
   demanda; Mermaid e Cytoscape entram apenas quando usados).
 
@@ -214,9 +239,18 @@ produzido.
 - Etapa 1.4 (concluída): knowledge graph (wikilinks + tags + palavras-chave,
   grafo global e contextual, backlinks, nuvem de palavras) e diagramas Mermaid
   em Markdown.
+- Etapa 1.5 (concluída): contas locais com criptografia de repouso e
+  sincronização de ponta a ponta.
 
 ## Privacidade
 
 Tudo é **offline first**: notas, cadernos, tags e anexos vivem no IndexedDB do
 dispositivo. Os dados só trafegam quando a sincronização é configurada e
 disparada manualmente, e a autenticação usa um segredo compartilhado.
+
+Além disso, com uma conta local ativa o app usa **criptografia de ponta a
+ponta**: o conteúdo (notas e anexos) é cifrado no dispositivo antes de ser
+enviado ao Worker, então o servidor só armazena envelopes — sem acesso ao texto
+puro. Se você sincronizar entre dois dispositivos com a **mesma conta** (mesmo
+segredo), o segundo dispositivo também consegue decifrar; contas diferentes
+nunca compartilham conteúdo.
