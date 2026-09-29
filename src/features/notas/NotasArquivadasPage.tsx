@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
 import { Archive } from 'lucide-react'
 import { EmptyState, PageHeader } from '../../components/ui'
-import { notasStore } from '../../core'
+import { notasProtegidasStore } from '../../core'
 import { STATUS_NOTA } from '../../domain'
 import { NotaCard } from './components/NotaCard'
-import { useNotas } from './hooks'
+import { ehDonoNaUi, useContextoNotaAtual, useNotas } from './hooks'
 import { useTags } from '../tags/hooks'
 
 export function NotasArquivadasPage() {
+  const contextoNota = useContextoNotaAtual()
   const { itens: notas, recarregar } = useNotas({
     status: STATUS_NOTA.ARQUIVADA,
     ordenacao: 'alteradaEm',
@@ -44,9 +45,21 @@ export function NotasArquivadasPage() {
               key={nota.id}
               nota={nota}
               tagsPorId={tagsPorId}
-              aoAlternarFavorita={(id) => void executar(() => notasStore.alternarFavorita(id))}
-              aoRestaurar={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ATIVA))}
-              aoMoverLixeira={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.LIXEIRA))}
+              aoAlternarFavorita={
+                ehDonoNaUi(nota, contextoNota)
+                  ? (id) => void executar(() => notasProtegidasStore.atualizarComoUsuario(id, { favorita: !nota.favorita }, contextoNota))
+                  : undefined
+              }
+              aoRestaurar={
+                ehDonoNaUi(nota, contextoNota)
+                  ? (id) => void executar(() => notasProtegidasStore.mudarStatusComoUsuario(id, STATUS_NOTA.ATIVA, contextoNota))
+                  : undefined
+              }
+              aoMoverLixeira={
+                ehDonoNaUi(nota, contextoNota)
+                  ? (id) => void executar(() => notasProtegidasStore.mudarStatusComoUsuario(id, STATUS_NOTA.LIXEIRA, contextoNota))
+                  : undefined
+              }
             />
           ))}
         </div>

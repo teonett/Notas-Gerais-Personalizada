@@ -19,3 +19,37 @@ export const STATUS_LABELS: Record<StatusNota, string> = {
   ARQUIVADA: 'Arquivada',
   LIXEIRA: 'Na lixeira',
 }
+
+export const PAPEL_USUARIO = {
+  USUARIO: 'USUARIO',
+  ADMIN: 'ADMIN',
+} as const
+
+export type PapelUsuario = (typeof PAPEL_USUARIO)[keyof typeof PAPEL_USUARIO]
+
+export const VISIBILIDADE_NOTA = {
+  PRIVADA: 'PRIVADA',
+  PUBLICA: 'PUBLICA',
+} as const
+
+export type VisibilidadeNota = (typeof VISIBILIDADE_NOTA)[keyof typeof VISIBILIDADE_NOTA]
+
+export const STATUS_SUGESTAO_NOTA = {
+  PENDENTE: 'PENDENTE',
+  ACEITA: 'ACEITA',
+  REJEITADA: 'REJEITADA',
+  CONFLITO: 'CONFLITO',
+} as const
+
+export type StatusSugestaoNota = (
+  typeof STATUS_SUGESTAO_NOTA
+)[keyof typeof STATUS_SUGESTAO_NOTA]
+
+export const TIPO_ALVO_PERMISSAO = {
+  USUARIO: 'USUARIO',
+  GRUPO: 'GRUPO',
+} as const
+
+export type TipoAlvoPermissao = (
+  typeof TIPO_ALVO_PERMISSAO
+)[keyof typeof TIPO_ALVO_PERMISSAO]

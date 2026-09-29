@@ -65,7 +65,7 @@ function notaDeBlocoMarkdown(bloco: string): NotaEmArquivo | null {
 
 function dividirNotasMarkdown(texto: string): NotaEmArquivo[] | null {
   const blocos = texto
-    .split(/^-{3,}\s*$/m)
+    .split(/^---\s*$/m)
     .map((bloco) => bloco.trim())
     .filter((bloco) => bloco !== '')
   if (blocos.length <= 1) return null

@@ -1,4 +1,5 @@
 import { LayoutDashboard, Lock, Plus } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Button, Card, PageHeader } from '../../components/ui'
 
 export function DashboardPage() {
@@ -8,10 +9,12 @@ export function DashboardPage() {
         titulo="Painel inicial"
         descricao="Visão geral das suas notas e atividades."
         acoes={
-          <Button>
-            <Plus className="size-4" aria-hidden="true" />
-            Nova nota
-          </Button>
+          <Link to="/notas/nova">
+            <Button>
+              <Plus className="size-4" aria-hidden="true" />
+              Nova nota
+            </Button>
+          </Link>
         }
       />
 

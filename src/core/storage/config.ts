@@ -1,6 +1,6 @@
 export const BANCO = {
   nome: 'thothnet',
-  versao: 4,
+  versao: 5,
   stores: {
     meta: 'meta',
     notas: 'notas',
@@ -8,6 +8,11 @@ export const BANCO = {
     tags: 'tags',
     anexos: 'anexos',
     sincronizacao: 'sincronizacao',
+    usuarios: 'usuarios',
+    grupos: 'grupos',
+    membrosGrupos: 'membrosGrupos',
+    permissoesNota: 'permissoesNota',
+    sugestoesNota: 'sugestoesNota',
   } as const,
 } as const
 

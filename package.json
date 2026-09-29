@@ -11,6 +11,13 @@
     "teste:grafo": "tsx scripts/teste-grafo.ts",
     "teste:auth": "tsx scripts/teste-auth.ts",
     "teste:intercambio": "tsx scripts/teste-intercambio.ts",
+    "teste:modal": "tsx scripts/teste-modal-foco.ts",
+    "teste:dominio-multiusuario": "tsx scripts/teste-dominio-multiusuario.ts",
+    "teste:persistencia-multiusuario": "tsx scripts/teste-persistencia-multiusuario.ts",
+    "teste:operacoes-nota": "tsx scripts/teste-operacoes-nota.ts",
+    "teste:compartilhamento-nota": "tsx scripts/teste-compartilhamento-nota.ts",
+    "teste:governanca": "tsx scripts/teste-governanca.ts",
+    "teste:bootstrap-admin": "tsx scripts/teste-bootstrap-admin.ts",
     "teste:nuvem": "tsx scripts/teste-nuvem.ts",
     "preview": "vite preview",
     "generate:icons": "pwa-assets-generator -p minimal public/logo.svg"

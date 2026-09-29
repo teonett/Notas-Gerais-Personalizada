@@ -16,6 +16,7 @@ import {
   StickyNote,
   Tag,
   Trash2,
+  UsersRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -45,6 +46,7 @@ export const ROTAS = {
   nuvem: '/nuvem',
   configuracoes: '/configuracoes',
   seguranca: '/seguranca',
+  governanca: '/governanca',
   importarExportar: '/importar-exportar',
   status: '/status',
   sincronizacao: '/sincronizar',
@@ -91,6 +93,7 @@ export const GRUPOS_NAVEGACAO: GrupoNavegacao[] = [
     itens: [
       { rotulo: 'Configurações', caminho: ROTAS.configuracoes, icone: Settings },
       { rotulo: 'Contas e segurança', caminho: ROTAS.seguranca, icone: ShieldCheck },
+      { rotulo: 'Governanca', caminho: ROTAS.governanca, icone: UsersRound },
       { rotulo: 'Sobre o ThothNet', caminho: ROTAS.painel, icone: BookOpen },
     ],
   },

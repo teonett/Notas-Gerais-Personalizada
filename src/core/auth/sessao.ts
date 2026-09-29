@@ -1,6 +1,7 @@
 import type { ContaLocal, SessaoPublica } from '../../domain'
 import { AppError } from '../errors'
 import { ERROR_CODES } from '../errors'
+import { garantirPrimeiroAdministrador } from '../governanca'
 import { configurarCofre, excluirBancoPeloNome, fecharBancoPeloNome } from '../storage/idb'
 import { AUT } from './constantes'
 import { apagarConta, criarConta, obterContaPorNome } from './contas'
@@ -44,7 +45,8 @@ export function obterChaveDaSessao(): CryptoKey | null {
 }
 
 async function ativarSessao(conta: ContaLocal, chave: CryptoKey): Promise<void> {
-  configurarCofre(conta.id, chave)
+  configurarCofre(conta.id, chave, conta.nome)
+  await garantirPrimeiroAdministrador({ usuarioId: conta.id })
   sessao = { contaId: conta.id, nome: conta.nome, chave }
   notificar()
 }

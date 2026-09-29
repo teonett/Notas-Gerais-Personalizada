@@ -1,4 +1,6 @@
+export * from './autorizacao'
 export * from './errors'
 export * from './formato'
+export * from './governanca'
 export * from './repositorios'
 export * from './storage'

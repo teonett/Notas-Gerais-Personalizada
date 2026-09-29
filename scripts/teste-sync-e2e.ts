@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { setTimeout as dormir } from 'node:timers/promises'
@@ -16,6 +16,7 @@ const SEGREDO = 'segredo-de-teste-local'
 const RAIZ = path.resolve(import.meta.dirname, '..')
 const PASTA_WORKER = path.join(RAIZ, 'cloud', 'workers', 'thoth-sync')
 const PERSISTENCIA = path.join(os.tmpdir(), 'thothnet-e2e-persist')
+const VARS_DESENVOLVIMENTO = path.join(PASTA_WORKER, '.dev.vars')
 const WranglerJs: string = createRequire(path.join(PASTA_WORKER, 'package.json')).resolve('wrangler')
 
 let passos = 0
@@ -41,6 +42,7 @@ function ativarNovoDispositivo(): void {
 async function iniciarServidor(): Promise<ReturnType<typeof spawn>> {
   await rm(PERSISTENCIA, { recursive: true, force: true })
   await mkdir(PERSISTENCIA, { recursive: true })
+  await writeFile(VARS_DESENVOLVIMENTO, `SEGREDO=${SEGREDO}\n`, 'utf8')
   return spawn(
     process.execPath,
     [WranglerJs, 'dev', '--local', '--persist-to', PERSISTENCIA, '--port', String(PORTA), '--ip', '127.0.0.1'],
@@ -70,6 +72,7 @@ async function encerrarServidor(filho: ReturnType<typeof spawn>): Promise<void> 
   if (filho.pid !== undefined) {
     spawn('taskkill', ['/pid', String(filho.pid), '/T', '/F'], { stdio: 'ignore' })
   }
+  await rm(VARS_DESENVOLVIMENTO, { force: true })
   await dormir(1500)
 }
 

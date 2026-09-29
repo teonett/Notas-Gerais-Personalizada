@@ -3,13 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 import { Search, StickyNote } from 'lucide-react'
 import { EmptyState, Input, PageHeader } from '../../components/ui'
 import { LIMITS } from '../../config/limits'
-import { notasStore } from '../../core'
+import { notasProtegidasStore } from '../../core'
 import { STATUS_NOTA } from '../../domain'
 import { NotaCard } from '../notas/components/NotaCard'
-import { useNotas } from '../notas/hooks'
+import { ehDonoNaUi, useContextoNotaAtual, useNotas } from '../notas/hooks'
 import { useTags } from '../tags/hooks'
 
 export function BuscaPage() {
+  const contextoNota = useContextoNotaAtual()
   const [parametros] = useSearchParams()
   const termoInicial = parametros.get('termo') ?? ''
   const [termo, setTermo] = useState(termoInicial)
@@ -82,21 +83,52 @@ export function BuscaPage() {
                   key={nota.id}
                   nota={nota}
                   tagsPorId={tagsPorId}
-                  aoAlternarFavorita={(id) => void executar(() => notasStore.alternarFavorita(id))}
+                  aoAlternarFavorita={
+                    ehDonoNaUi(nota, contextoNota)
+                      ? (id) =>
+                          void executar(() =>
+                            notasProtegidasStore.atualizarComoUsuario(
+                              id,
+                              { favorita: !nota.favorita },
+                              contextoNota,
+                            ),
+                          )
+                      : undefined
+                  }
                   aoRestaurar={
-                    nota.status === STATUS_NOTA.LIXEIRA
-                      ? (id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ATIVA))
+                    nota.status === STATUS_NOTA.LIXEIRA && ehDonoNaUi(nota, contextoNota)
+                      ? (id) =>
+                          void executar(() =>
+                            notasProtegidasStore.mudarStatusComoUsuario(
+                              id,
+                              STATUS_NOTA.ATIVA,
+                              contextoNota,
+                            ),
+                          )
                       : undefined
                   }
                   aoArquivar={
-                    nota.status === STATUS_NOTA.ATIVA
+                    nota.status === STATUS_NOTA.ATIVA && ehDonoNaUi(nota, contextoNota)
                       ? (id) =>
-                          void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ARQUIVADA))
+                          void executar(() =>
+                            notasProtegidasStore.mudarStatusComoUsuario(
+                              id,
+                              STATUS_NOTA.ARQUIVADA,
+                              contextoNota,
+                            ),
+                          )
                       : undefined
                   }
                   aoMoverLixeira={
-                    nota.status !== STATUS_NOTA.LIXEIRA
-                      ? (id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.LIXEIRA))
+                    nota.status !== STATUS_NOTA.LIXEIRA && ehDonoNaUi(nota, contextoNota)
+                      ? (id) =>
+                          void executar(() =>
+                            notasProtegidasStore.mudarStatusComoUsuario(
+                              id,
+                              STATUS_NOTA.LIXEIRA,
+                              contextoNota,
+                            ),
+                          )
                       : undefined
                   }
                 />

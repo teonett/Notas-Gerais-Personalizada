@@ -6,6 +6,7 @@ import {
   gravarItem,
   gravarMeta,
   listarItens,
+  prepararPersistencia,
 } from '../storage/idb'
 import { comTransacao, requisicaoParaPromessa } from '../repositorios/base'
 import { SINCRONIZACAO } from '../../sync/config'
@@ -45,6 +46,11 @@ export async function migrarDadosLegados(): Promise<ResultadoMigracao> {
       tags: 0,
       anexos: 0,
       sincronizacao: 0,
+      usuarios: 0,
+      grupos: 0,
+      membrosGrupos: 0,
+      permissoesNota: 0,
+      sugestoesNota: 0,
     },
     configSyncImportada: false,
   }
@@ -69,6 +75,8 @@ export async function migrarDadosLegados(): Promise<ResultadoMigracao> {
     await gravarMeta(SINCRONIZACAO.metaChaveSegredo, segredo)
     resultado.configSyncImportada = true
   }
+
+  await prepararPersistencia()
 
   return resultado
 }

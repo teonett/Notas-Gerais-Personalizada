@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Eraser, Trash2 } from 'lucide-react'
 import { Button, ConfirmDialog, EmptyState, PageHeader } from '../../components/ui'
-import { anexosStore, notasStore } from '../../core'
+import { anexosStore, notasProtegidasStore } from '../../core'
 import { dataRelativa } from '../../core'
 import { STATUS_NOTA } from '../../domain'
 import { NotaCard } from '../notas/components/NotaCard'
-import { useNotas } from '../notas/hooks'
+import { ehDonoNaUi, useContextoNotaAtual, useNotas } from '../notas/hooks'
 import { useTags } from '../tags/hooks'
 
 export function LixeiraPage() {
+  const contextoNota = useContextoNotaAtual()
   const { itens: notas, recarregar } = useNotas({
     status: STATUS_NOTA.LIXEIRA,
     ordenacao: 'alteradaEm',
@@ -21,6 +22,10 @@ export function LixeiraPage() {
     () => Object.fromEntries(tags.map((tag) => [tag.id, tag.nome])),
     [tags],
   )
+  const notasDoUsuario = useMemo(
+    () => notas.filter((nota) => ehDonoNaUi(nota, contextoNota)),
+    [contextoNota, notas],
+  )
 
   const executar = async (acao: () => Promise<unknown>) => {
     await acao()
@@ -29,15 +34,14 @@ export function LixeiraPage() {
 
   const excluirDefinitivamente = async (id: string): Promise<void> => {
     await anexosStore.removerPorNota(id)
-    await notasStore.remover([id])
+    await notasProtegidasStore.removerComoUsuario([id], contextoNota)
   }
 
   const esvaziarLixeira = async (): Promise<void> => {
-    const lixeira = await notasStore.listar({ status: STATUS_NOTA.LIXEIRA })
-    for (const nota of lixeira) {
+    for (const nota of notasDoUsuario) {
       await anexosStore.removerPorNota(nota.id)
     }
-    await notasStore.limparLixeira()
+    await notasProtegidasStore.removerComoUsuario(notasDoUsuario.map((nota) => nota.id), contextoNota)
   }
 
   return (
@@ -46,7 +50,7 @@ export function LixeiraPage() {
         titulo="Lixeira"
         descricao="Notas excluídas que ainda podem ser restauradas."
         acoes={
-          notas.length > 0 ? (
+          notasDoUsuario.length > 0 ? (
             <Button variante="perigo" onClick={() => setConfirmarLimpeza(true)}>
               <Eraser className="size-4" aria-hidden="true" />
               Esvaziar lixeira
@@ -79,9 +83,33 @@ export function LixeiraPage() {
                 <NotaCard
                   nota={nota}
                   tagsPorId={tagsPorId}
-                  aoAlternarFavorita={(id) => void executar(() => notasStore.alternarFavorita(id))}
-                  aoRestaurar={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ATIVA))}
-                  aoExcluirDefinitivamente={(id) => setIdExclusao(id)}
+                  aoAlternarFavorita={
+                    ehDonoNaUi(nota, contextoNota)
+                      ? (id) =>
+                          void executar(() =>
+                            notasProtegidasStore.atualizarComoUsuario(
+                              id,
+                              { favorita: !nota.favorita },
+                              contextoNota,
+                            ),
+                          )
+                      : undefined
+                  }
+                  aoRestaurar={
+                    ehDonoNaUi(nota, contextoNota)
+                      ? (id) =>
+                          void executar(() =>
+                            notasProtegidasStore.mudarStatusComoUsuario(
+                              id,
+                              STATUS_NOTA.ATIVA,
+                              contextoNota,
+                            ),
+                          )
+                      : undefined
+                  }
+                  aoExcluirDefinitivamente={
+                    ehDonoNaUi(nota, contextoNota) ? (id) => setIdExclusao(id) : undefined
+                  }
                 />
               </div>
             ))}

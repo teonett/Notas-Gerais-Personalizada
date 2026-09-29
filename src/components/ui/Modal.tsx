@@ -14,6 +14,11 @@ interface ModalProps {
 export function Modal({ aberto, titulo, descricao, aoFechar, children }: ModalProps) {
   const botaoFecharRef = useRef<HTMLButtonElement>(null)
   const dialogoRef = useRef<HTMLDivElement>(null)
+  const aoFecharRef = useRef(aoFechar)
+
+  useEffect(() => {
+    aoFecharRef.current = aoFechar
+  }, [aoFechar])
 
   useEffect(() => {
     if (!aberto) return
@@ -24,7 +29,7 @@ export function Modal({ aberto, titulo, descricao, aoFechar, children }: ModalPr
 
     const aoTeclado = (evento: KeyboardEvent): void => {
       if (evento.key === 'Escape') {
-        aoFechar()
+        aoFecharRef.current()
       }
     }
 
@@ -33,7 +38,7 @@ export function Modal({ aberto, titulo, descricao, aoFechar, children }: ModalPr
       window.cancelAnimationFrame(rafId)
       document.removeEventListener('keydown', aoTeclado)
     }
-  }, [aberto, aoFechar])
+  }, [aberto])
 
   if (!aberto) {
     return null

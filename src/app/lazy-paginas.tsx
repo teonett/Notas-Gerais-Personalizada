@@ -51,3 +51,6 @@ export const StatusPage = lazy(() =>
 export const SegurancaPage = lazy(() =>
   import('../features/seguranca/SegurancaPage').then((modulo) => ({ default: modulo.SegurancaPage })),
 )
+export const GovernancaPage = lazy(() =>
+  import('../features/governanca/GovernancaPage').then((modulo) => ({ default: modulo.GovernancaPage })),
+)

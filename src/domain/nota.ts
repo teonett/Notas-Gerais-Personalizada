@@ -1,11 +1,13 @@
-import type { FormatoNota, StatusNota } from './tipos'
+import type { FormatoNota, StatusNota, VisibilidadeNota } from './tipos'
 
 export interface Nota {
   id: string
+  ownerId?: string | null
   titulo: string
   conteudo: string
   formato: FormatoNota
   status: StatusNota
+  visibilidade?: VisibilidadeNota
   favorita: boolean
   fixada: boolean
   cadernoId: string | null
@@ -21,7 +23,7 @@ export type NovaNota = Omit<
 >
 
 export type AlteracaoNota = Partial<
-  Omit<Nota, 'id' | 'criadaEm' | 'alteradaEm'>
+  Omit<Nota, 'id' | 'ownerId' | 'criadaEm' | 'alteradaEm'>
 >
 
 export function tituloDaNota(nota: Nota | undefined, padrao = 'Sem título'): string {

@@ -1,6 +1,6 @@
-import type { Nota } from '../../domain'
-import { gerarId, STATUS_NOTA } from '../../domain'
-import { apagarItem, gravarItem, lerItem, listarItens } from '../storage/idb'
+import type { Nota, VisibilidadeNota } from '../../domain'
+import { duplicarNotaParaUsuario, gerarId, STATUS_NOTA, VISIBILIDADE_NOTA } from '../../domain'
+import { apagarItem, gravarItem, lerItem, listarItens, obterUsuarioPadraoAtual } from '../storage/idb'
 import { tagsStore } from './tags'
 import { registrarNota, registrarRemocao } from '../../sync/mudancas'
 
@@ -14,7 +14,12 @@ export interface AFiltroNota {
 }
 
 export type NovaNota = Pick<Nota, 'titulo' | 'conteudo' | 'formato'> &
-  Partial<Pick<Nota, 'cadernoId' | 'tagIds' | 'status' | 'favorita' | 'fixada'>>
+  Partial<Pick<Nota, 'cadernoId' | 'tagIds' | 'status' | 'favorita' | 'fixada' | 'ownerId' | 'visibilidade'>>
+
+export interface ContextoNotaUsuario {
+  usuarioId?: string
+  visibilidadePadrao?: VisibilidadeNota
+}
 
 const STORE = 'notas'
 
@@ -25,13 +30,26 @@ function normalizarTexto(texto: string): string {
     .toLowerCase()
 }
 
-function objetoDaNota(nova: NovaNota, agora: string): Nota {
+function ownerIdDaOperacao(nova: Pick<NovaNota, 'ownerId'>, contexto?: ContextoNotaUsuario): string {
+  return nova.ownerId ?? contexto?.usuarioId ?? obterUsuarioPadraoAtual().id
+}
+
+function visibilidadeDaOperacao(
+  nova: Pick<NovaNota, 'visibilidade'>,
+  contexto?: ContextoNotaUsuario,
+): VisibilidadeNota {
+  return nova.visibilidade ?? contexto?.visibilidadePadrao ?? VISIBILIDADE_NOTA.PRIVADA
+}
+
+function objetoDaNota(nova: NovaNota, agora: string, contexto?: ContextoNotaUsuario): Nota {
   return {
     id: gerarId(),
+    ownerId: ownerIdDaOperacao(nova, contexto),
     titulo: nova.titulo.trim(),
     conteudo: nova.conteudo,
     formato: nova.formato,
     status: nova.status ?? STATUS_NOTA.ATIVA,
+    visibilidade: visibilidadeDaOperacao(nova, contexto),
     favorita: nova.favorita ?? false,
     fixada: nova.fixada ?? false,
     cadernoId: nova.cadernoId ?? null,
@@ -77,9 +95,9 @@ export async function buscarPorTermo(notas: Nota[], termo: string): Promise<Nota
 }
 
 export const notasStore = {
-  async criar(nova: NovaNota): Promise<Nota> {
+  async criar(nova: NovaNota, contexto?: ContextoNotaUsuario): Promise<Nota> {
     const agora = new Date().toISOString()
-    const nota = objetoDaNota(nova, agora)
+    const nota = objetoDaNota(nova, agora, contexto)
     await gravarItem(STORE, nota)
     await registrarNota(nota)
     return nota
@@ -175,22 +193,18 @@ export const notasStore = {
     return this.atualizar(id, { fixada: !nota.fixada })
   },
 
-  async duplicar(id: string): Promise<Nota | undefined> {
+  async duplicar(id: string, contexto?: ContextoNotaUsuario): Promise<Nota | undefined> {
     const nota = await this.obter(id)
     if (nota === undefined) {
       return undefined
     }
     const agora = new Date().toISOString()
-    const copia: Nota = {
-      ...nota,
-      id: gerarId(),
-      titulo: `${nota.titulo} — cópia`,
-      favorita: false,
-      fixada: false,
+    const copia = duplicarNotaParaUsuario({
+      nota,
+      novoId: gerarId(),
+      novoOwnerId: contexto?.usuarioId ?? obterUsuarioPadraoAtual().id,
       criadaEm: agora,
-      alteradaEm: agora,
-      excluidaEm: null,
-    }
+    })
     await gravarItem(STORE, copia)
     await registrarNota(copia)
     return copia

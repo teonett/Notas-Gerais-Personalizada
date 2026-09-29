@@ -3,8 +3,8 @@ import { ArrowDownAZ, Clock, Plus, Search, StickyNote } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button, EmptyState, Input, PageHeader } from '../../components/ui'
 import { LIMITS } from '../../config/limits'
-import { notasStore } from '../../core'
-import { useNotas } from './hooks'
+import { notasProtegidasStore } from '../../core'
+import { ehDonoNaUi, useContextoNotaAtual, useNotas } from './hooks'
 import { NotaCard } from './components/NotaCard'
 import { useTags } from '../tags/hooks'
 import { STATUS_NOTA } from '../../domain'
@@ -14,6 +14,7 @@ type Ordenacao = 'alteradaEm' | 'titulo'
 export function NotasPage() {
   const [termo, setTermo] = useState('')
   const [ordenacao, setOrdenacao] = useState<Ordenacao>('alteradaEm')
+  const contextoNota = useContextoNotaAtual()
   const { itens: notas, recarregar } = useNotas({
     status: STATUS_NOTA.ATIVA,
     ordenacao,
@@ -32,6 +33,32 @@ export function NotasPage() {
   const executar = async (acao: () => Promise<unknown>) => {
     await acao()
     recarregar()
+  }
+
+  const renderizarNota = (nota: (typeof notas)[number]) => {
+    const podeAlterar = ehDonoNaUi(nota, contextoNota)
+    return (
+      <NotaCard
+        key={nota.id}
+        nota={nota}
+        tagsPorId={tagsPorId}
+        aoAlternarFavorita={
+          podeAlterar
+            ? (id) => void executar(() => notasProtegidasStore.atualizarComoUsuario(id, { favorita: !nota.favorita }, contextoNota))
+            : undefined
+        }
+        aoArquivar={
+          podeAlterar
+            ? (id) => void executar(() => notasProtegidasStore.mudarStatusComoUsuario(id, STATUS_NOTA.ARQUIVADA, contextoNota))
+            : undefined
+        }
+        aoMoverLixeira={
+          podeAlterar
+            ? (id) => void executar(() => notasProtegidasStore.mudarStatusComoUsuario(id, STATUS_NOTA.LIXEIRA, contextoNota))
+            : undefined
+        }
+      />
+    )
   }
 
   return (
@@ -120,16 +147,7 @@ export function NotasPage() {
                 Fixadas
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {fixadas.map((nota) => (
-                  <NotaCard
-                    key={nota.id}
-                    nota={nota}
-                    tagsPorId={tagsPorId}
-                    aoAlternarFavorita={(id) => void executar(() => notasStore.alternarFavorita(id))}
-                    aoArquivar={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ARQUIVADA))}
-                    aoMoverLixeira={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.LIXEIRA))}
-                  />
-                ))}
+                {fixadas.map(renderizarNota)}
               </div>
             </section>
           )}
@@ -140,16 +158,7 @@ export function NotasPage() {
               </h2>
             )}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {demais.map((nota) => (
-                <NotaCard
-                  key={nota.id}
-                  nota={nota}
-                  tagsPorId={tagsPorId}
-                  aoAlternarFavorita={(id) => void executar(() => notasStore.alternarFavorita(id))}
-                  aoArquivar={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.ARQUIVADA))}
-                  aoMoverLixeira={(id) => void executar(() => notasStore.mudarStatus(id, STATUS_NOTA.LIXEIRA))}
-                />
-              ))}
+              {demais.map(renderizarNota)}
             </div>
           </section>
         </div>

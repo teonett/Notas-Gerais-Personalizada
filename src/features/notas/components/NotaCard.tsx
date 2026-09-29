@@ -17,7 +17,7 @@ import { STATUS_NOTA } from '../../../domain'
 interface NotaCardProps {
   nota: Nota
   tagsPorId?: Record<string, string>
-  aoAlternarFavorita: (id: string) => void
+  aoAlternarFavorita?: (id: string) => void
   aoArquivar?: (id: string) => void
   aoRestaurar?: (id: string) => void
   aoMoverLixeira?: (id: string) => void
@@ -65,18 +65,20 @@ export function NotaCard({
         </Link>
 
         <div className="flex shrink-0 items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => aoAlternarFavorita(nota.id)}
-            aria-label={nota.favorita ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-            className={`rounded-lg p-1.5 transition-colors ${
-              nota.favorita
-                ? 'text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/15'
-                : 'text-slate-400 hover:bg-slate-100 hover:text-amber-500 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Star className={`size-4 ${nota.favorita ? 'fill-current' : ''}`} aria-hidden="true" />
-          </button>
+          {aoAlternarFavorita !== undefined && (
+            <button
+              type="button"
+              onClick={() => aoAlternarFavorita(nota.id)}
+              aria-label={nota.favorita ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              className={`rounded-lg p-1.5 transition-colors ${
+                nota.favorita
+                  ? 'text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/15'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-amber-500 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Star className={`size-4 ${nota.favorita ? 'fill-current' : ''}`} aria-hidden="true" />
+            </button>
+          )}
           {aoRestaurar !== undefined && (
             <button
               type="button"
